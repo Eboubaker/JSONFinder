@@ -8,6 +8,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: php-actions/composer@v5
-      - name: run PHPUnit
-        run: |
-          ./vendor/bin/phpunit --testdox
+      - uses: php-actions/phpunit@v3
