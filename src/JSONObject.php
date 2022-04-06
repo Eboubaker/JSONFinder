@@ -188,16 +188,25 @@ class JSONObject implements JSONContainer
 
     #region PHP
     #region ArrayAccess
+    /**
+     * @internal this method is not part of the public API
+     */
     public function offsetExists($offset): bool
     {
         return isset($this->entries[$offset]);
     }
 
+    /**
+     * @internal this method is not part of the public API
+     */
     public function offsetGet($offset)
     {
         return $this->entries[$offset];
     }
 
+    /**
+     * @internal this method is not part of the public API
+     */
     public function offsetSet($offset, $value)
     {
         if (!($value instanceof JSONEntry)) {
@@ -208,12 +217,18 @@ class JSONObject implements JSONContainer
         $this->entries[$offset] = $value;
     }
 
+    /**
+     * @internal this method is not part of the public API
+     */
     public function offsetUnset($offset)
     {
         unset($this->entries[$offset]);
     }
     #endregion ArrayAccess
     #region IteratorAggregate
+    /**
+     * @internal this method is not part of the public API
+     */
     public function getIterator(): ArrayIterator
     {
         return new RecursiveArrayIterator($this->entries);
