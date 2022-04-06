@@ -1,0 +1,51 @@
+{
+  "_id": "624c6918248aad737f623409",
+  "index": 5,
+  "guid": "038f6315-751b-43b3-ab78-b155593e7686",
+  "isActive": true,
+  "balance": "$3,561.79",
+  "picture": "http://placehold.it/32x32",
+  "age": 23,
+  "eyeColor": "green",
+  "name": "Thompson Brown",
+  "gender": "male",
+  "company": "IRACK",
+  "email": "thompsonbrown@irack.com",
+  "phone": "+1 (900) 522-2594",
+  "address": "505 Montgomery Street, Sandston, Indiana, 9694",
+  "about": "Veniam magna consequat eiusmod eu dolor. Minim dolor adipisicing ipsum ut eiusmod ullamco fugiat minim veniam dolore culpa eu sunt. Labore sint proident ad officia. Adipisicing velit proident velit exercitation nisi veniam aliquip eiusmod cillum. Tempor proident nulla nisi qui non excepteur do dolor ad sit. Mollit sunt sint aute ad. Elit tempor proident proident elit ad amet sit.\r\n",
+  "registered": "2020-12-22T09:59:55 -01:00",
+  "latitude": -52.914123,
+  "longitude": 124.207272,
+  "tags": [
+    "ullamco",
+    "voluptate",
+    "quis",
+    "incididunt",
+    "mollit",
+    "veniam",
+    "aliqua"
+  ],
+  "friends": [
+    {
+      "id": 0,
+      "name": "Gross Lawson",
+      "about": "age: 24\n name: Gross",
+      "range": -0.8e-13
+    },
+    {
+      "id": 1,
+      "name": "Burt Mcfadden",
+      "about": "\t Burt\nlikes programming",
+      "range": 1.8e-13
+    },
+    {
+      "id": 2,
+      "name": "Silvia Wiley",
+      "about": "likes \"memes\"\r\n\\",
+      "range": 2E11
+    }
+  ],
+  "greeting": "Hello, Thompson Brown! You have 3 unread messages.",
+  "favoriteFruit": "banana"
+}
