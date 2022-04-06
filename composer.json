@@ -1,0 +1,32 @@
+{
+  "type": "library",
+  "name": "eboubaker/json-finder",
+  "description": "Utility that can extract json from text or html documents",
+  "require": {
+    "php": "^7.4|^8.0|^8.1"
+  },
+  "authors": [
+    {
+      "name": "Eboubaker Bekkouche",
+      "email": "eboubakkar@gmail.com"
+    }
+  ],
+  "license": "CC-BY-3.0",
+  "autoload": {
+    "psr-4": {
+      "Eboubaker\\JSON\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "ext-json": "*"
+  },
+  "scripts": {
+    "wtest": "vendor\\bin\\phpunit --testdox tests"
+  }
+}
