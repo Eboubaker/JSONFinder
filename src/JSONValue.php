@@ -61,6 +61,7 @@ class JSONValue implements JSONEntry
                 $char = $this->value[$i];
                 if ($char === '\\') $string .= '\\\\';
                 else if ($char === '"') $string .= '\\"';
+                else if ($char === '/') $string .= '\\/';
                 else if ($char === "\n") $string .= '\\n';
                 else if ($char === "\r") $string .= '\\r';
                 else if ($char === "\t") $string .= '\\t';
