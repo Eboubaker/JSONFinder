@@ -17,11 +17,11 @@ suppose you want to extract all json from an http response (from &lt;script&gt; 
 ```php
 use Eboubaker\JSON\JSONFinder;
 
-$html = file_get_contents('http://www.google.com');
+$html = file_get_contents('http://www.youtube.com');
 $finder = new JSONFinder();
 
 /**
- * @var JSONArray $foundEntries
+ * @var \Eboubaker\JSON\JSONArray $foundEntries
  */
 $foundEntries = $finder->findJsonEntries($html);
 
@@ -29,7 +29,7 @@ $foundEntries = $finder->findJsonEntries($html);
 $associative = $foundEntries->assoc();
 
 // first entry in the JSONArray
-$first = $json[0];
+$first = $foundEntries[3];
 
 // get json string of the first entry (similar to json_encode)
 $jsonString = strval($first);
