@@ -1,6 +1,10 @@
 # JSONFinder
 JSONFinder is a library that can find json values in a mixed text. 
 
+[![Latest Stable Version](https://img.shields.io/packagist/v/eboubaker/json-finder.svg?style=flat-square)](https://packagist.org/packages/eboubaker/json-finder)
+[![PHP Version Require](http://poser.pugx.org/eboubaker/json-finder/require/php)](https://packagist.org/packages/phpunit/phpunit)
+[![CI Status](https://github.com/eboubaker/JSONFinder/actions/workflows/RunTests.yml/badge.svg)](https://github.com/Eboubaker/JSONFinder/actions)
+
 ## Installation
 
 install the library with composer
