@@ -43,5 +43,8 @@ foreach($foundEntries as $key => $value) {
 foreach($foundEntries->values() as $key => $value) {
     // ....
 }
+
+// pretty print the json entry with indentation of 2 spaces
+echo $foundEntries->toReadableString(2);
 ```
 All other functions are self documented.
