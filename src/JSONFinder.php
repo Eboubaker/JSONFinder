@@ -12,7 +12,15 @@ use InvalidArgumentException;
 class JSONFinder
 {
     public const T_ARRAY = 1;
+    /**
+     * array with zero elements inside
+     */
+    public const T_EMPTY_ARRAY = 1;
     public const T_OBJECT = 2;
+    /**
+     * object with zero elements inside
+     */
+    public const T_EMPTY_OBJECT = 2;
     public const T_STRING = 3;
     public const T_NUMBER = 4;
     public const T_BOOLEAN = 5;
@@ -20,7 +28,9 @@ class JSONFinder
     public const T_ALL = [self::T_ARRAY, self::T_OBJECT, self::T_STRING, self::T_NUMBER, self::T_BOOLEAN, self::T_NULL];
 
     private bool $T_OBJECT_ALLOWED = false;
+    private bool $T_EMPTY_OBJECT_ALLOWED = false;
     private bool $T_ARRAY_ALLOWED = false;
+    private bool $T_EMPTY_ARRAY_ALLOWED = false;
     private bool $T_STRING_ALLOWED = false;
     private bool $T_NUMBER_ALLOWED = false;
     private bool $T_BOOLEAN_ALLOWED = false;
@@ -36,7 +46,9 @@ class JSONFinder
             if ($allowed_types === JSONFinder::T_ALL) {
                 allow_all_types:
                 $this->T_OBJECT_ALLOWED = true;
+                $this->T_EMPTY_OBJECT_ALLOWED = true;
                 $this->T_ARRAY_ALLOWED = true;
+                $this->T_EMPTY_ARRAY_ALLOWED = true;
                 $this->T_STRING_ALLOWED = true;
                 $this->T_NUMBER_ALLOWED = true;
                 $this->T_BOOLEAN_ALLOWED = true;
@@ -47,7 +59,9 @@ class JSONFinder
         } else {
             foreach ($allowed_types as $t) {
                 if ($t === JSONFinder::T_OBJECT) $this->T_OBJECT_ALLOWED = true;
+                else if ($t === JSONFinder::T_EMPTY_OBJECT) $this->T_EMPTY_OBJECT_ALLOWED = true;
                 else if ($t === JSONFinder::T_ARRAY) $this->T_ARRAY_ALLOWED = true;
+                else if ($t === JSONFinder::T_EMPTY_ARRAY) $this->T_EMPTY_ARRAY_ALLOWED = true;
                 else if ($t === JSONFinder::T_STRING) $this->T_STRING_ALLOWED = true;
                 else if ($t === JSONFinder::T_NUMBER) $this->T_NUMBER_ALLOWED = true;
                 else if ($t === JSONFinder::T_BOOLEAN) $this->T_BOOLEAN_ALLOWED = true;
@@ -94,8 +108,13 @@ class JSONFinder
                 || is_bool($entry->value) && $this->T_BOOLEAN_ALLOWED
                 || is_null($entry->value) && $this->T_NULL_ALLOWED;
         } else {
-            return $entry instanceof JSONObject && $this->T_OBJECT_ALLOWED
-                || $entry instanceof JSONArray && $this->T_ARRAY_ALLOWED;
+            if($entry instanceof JSONObject && $this->T_OBJECT_ALLOWED){
+                return $entry->count() > 0 || $this->T_EMPTY_OBJECT_ALLOWED;
+            }else if($entry instanceof JSONArray && $this->T_ARRAY_ALLOWED){
+                return $entry->count() > 0 || $this->T_EMPTY_ARRAY_ALLOWED;
+            }else{
+                return false;
+            }
         }
     }
 
