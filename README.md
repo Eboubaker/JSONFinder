@@ -28,7 +28,7 @@ $foundEntries = $finder->findJsonEntries($html);
 // associative array of all found json entries
 $associative = $foundEntries->assoc();
 
-// first entry in the JSONArray
+// 4th entry in the JSONArray
 $first = $foundEntries[3];
 
 // get json string of the first entry (similar to json_encode)
