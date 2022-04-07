@@ -79,17 +79,19 @@ class JSONFinder
     public function findJsonEntries(string $text): JSONArray
     {
         $values = [];
-        while (strlen($text) > 0) {
-            $value = $this->parse($text);
+        $offset = 0;
+        $len = strlen($text);
+        while ($offset < $len) {
+            $value = $this->parse($text, $len, $offset);
             if ($value === null) {
-                // invalid json, remove one char and try again
-                $text = substr($text, 1);
+                // invalid json, move the offset and try again
+                $offset++;
             } else {
                 if ($this->isAllowedEntry($value->entry)) {
                     // only add the entry if it is allowed by the configuration
                     $values[] = $value->entry;
                 }
-                $text = substr($text, $value->length);
+                $offset += $value->length;
             }
         }
         return new JSONArray($values);
@@ -121,35 +123,37 @@ class JSONFinder
     /**
      * returns the first found json entry in the given string or null if no valid entry was found
      * @param string $raw
+     * @param int $len
+     * @param int $from
      * @return JSONValue|JSONArray|JSONObject
      */
-    private function parse(string $raw): ?JTokenStruct
+    private function parse(string $raw, int $len, int $from): ?JTokenStruct
     {
         //@formatter:off
-        return $this->parseString($raw)
-            ?: $this->parseObject($raw)
-            ?: $this->parseArray($raw)
-            ?: $this->parseNumber($raw)
-            ?: $this->parseBoolean($raw)
-            ?: $this->parseNull($raw)
+        return $this->parseString($raw, $len, $from)
+            ?: $this->parseObject($raw, $len, $from)
+            ?: $this->parseArray($raw, $len, $from)
+            ?: $this->parseNumber($raw, $len, $from)
+            ?: $this->parseBoolean($raw, $from)
+            ?: $this->parseNull($raw, $from)
             ?: null;
         //@formatter:on
     }
 
-    private function parseNull(string $raw): ?JTokenStruct
+    private function parseNull(string $raw, int $from): ?JTokenStruct
     {
-        if (substr($raw, 0, 4) === 'null') {
+        if (substr($raw, $from, 4) === 'null') {
             return new JTokenStruct(new JSONValue(null), 4);
         } else {
             return null;
         }
     }
 
-    private function parseBoolean(string $raw): ?JTokenStruct
+    private function parseBoolean(string $raw, int $from): ?JTokenStruct
     {
-        if (substr($raw, 0, 4) === 'true') {
+        if (substr($raw, $from, 4) === 'true') {
             return new JTokenStruct(new JSONValue(true), 4);
-        } else if (substr($raw, 0, 5) === 'false') {
+        } else if (substr($raw, $from, 5) === 'false') {
             return new JTokenStruct(new JSONValue(false), 5);
         }
         return null;
@@ -158,19 +162,20 @@ class JSONFinder
     /**
      * read through the string characters until an unclosing '"' is found, return string that is between the first non escaped '"' and the last non escaped '"'
      * @param string $raw
+     * @param int $len
+     * @param int $from
      * @return JTokenStruct|null
      */
-    private function parseString(string $raw): ?JTokenStruct
+    private function parseString(string $raw, int $len, int $from): ?JTokenStruct
     {
-        if ($raw[0] !== '"') {
+        if ($raw[$from] !== '"') {
             return null;
         }
-        $i = 1;
-        $len = strlen($raw);
+        $i = 1 + $from;
         $chars = '';
         while ($i < $len) {
             if ($raw[$i] === '"') {
-                return new JTokenStruct(new JSONValue($chars), $i + 1);
+                return new JTokenStruct(new JSONValue($chars), ($i - $from) + 1);
             } else if ($raw[$i] === '\\' && $i + 1 < $len) {
                 // parse codepoint chars(\u...., \t, \n, \r, \f, \b, \/, \\, \")
                 $i++;
@@ -208,9 +213,9 @@ class JSONFinder
     /**
      * try parse a json number
      */
-    private function parseNumber(string $raw): ?JTokenStruct
+    private function parseNumber(string $raw, int $len, int $from): ?JTokenStruct
     {
-        if ($raw[0] !== "+" && $raw[0] !== "-" && !is_numeric($raw[0])) {
+        if ($raw[$from] !== "+" && $raw[$from] !== "-" && !is_numeric($raw[$from])) {
             return null;
         }
         $eSign = '';
@@ -218,8 +223,7 @@ class JSONFinder
         $foundDot = false;
         $foundE = false;
         $number = '';
-        $i = 0;
-        $len = strlen($raw);
+        $i = $from;
         while ($i < $len) {
             $char = $raw[$i];
             if ($char === '.') {
@@ -266,22 +270,21 @@ class JSONFinder
             // unexpected end of number
             return null;
         }
-        return new JTokenStruct(new JSONValue($foundDot ? floatval($number) : intval($number)), $i + 1);
+        return new JTokenStruct(new JSONValue($foundDot ? floatval($number) : intval($number)), ($i - $from) + 1);
     }
 
-    private function parseArray(string $raw): ?JTokenStruct
+    private function parseArray(string $raw, int $len, int $from): ?JTokenStruct
     {
-        if ($raw[0] !== "[") {
+        if ($raw[$from] !== "[") {
             // not start of array
             return null;
         }
-        $len = strlen($raw);
-        if ($len < 2) {
+        if ($from+1 >= $len) {
             // array not closed
             return null;
         }
         $values = [];
-        $i = 1;
+        $i = 1 + $from;
         $lastWasComma = false;
         while ($i < $len) {
             $i = $this->skipWhitespaces($raw, $i, $len);
@@ -294,7 +297,7 @@ class JSONFinder
                     // comma without a value after is incorrect
                     return null;
                 }
-                return new JTokenStruct(new JSONArray($values), $i + 1);
+                return new JTokenStruct(new JSONArray($values), ($i - $from) + 1);
             } else if ($raw[$i] === ',') {
                 if ($lastWasComma) {
                     // there are two consecutive commas, which is invalid
@@ -304,7 +307,7 @@ class JSONFinder
                 $i++;
             } else {
                 $lastWasComma = false;
-                $token = $this->parse(substr($raw, $i));
+                $token = $this->parse($raw, $len, $i);
                 if ($token === null) {
                     // invalid value
                     return null;
@@ -317,19 +320,18 @@ class JSONFinder
         return null;
     }
 
-    private function parseObject(string $raw): ?JTokenStruct
+    private function parseObject(string $raw, int $len, int $from): ?JTokenStruct
     {
-        if ($raw[0] !== "{") {
+        if ($raw[$from] !== "{") {
             // not start of object
             return null;
         }
-        $len = strlen($raw);
-        if ($len < 2) {
+        if ($from+1 >= $len) {
             // object not closed
             return null;
         }
         $values = [];
-        $i = 1;
+        $i = 1 + $from;
         $lastWasComma = false;
         while ($i < $len) {
             $i = $this->skipWhitespaces($raw, $i, $len);
@@ -342,7 +344,7 @@ class JSONFinder
                     // comma without a key-value pair after is incorrect
                     return null;
                 }
-                return new JTokenStruct(new JSONObject($values), $i + 1);
+                return new JTokenStruct(new JSONObject($values), ($i - $from) + 1);
             } else if ($raw[$i] === ',') {
                 if ($lastWasComma) {
                     // there are two consecutive commas, which is invalid
@@ -356,7 +358,7 @@ class JSONFinder
                     // expected start of json key
                     return null;
                 }
-                $keyToken = $this->parseString(substr($raw, $i));
+                $keyToken = $this->parseString($raw, $len, $i);
                 if ($keyToken === null || (!$keyToken->entry instanceof JSONValue) || (!is_string($keyToken->entry->value) && !is_string($keyToken->entry->value))) {
                     // invalid json key, must be string
                     return null;
@@ -376,7 +378,7 @@ class JSONFinder
                     // reached end of string and object was not closed
                     return null;
                 }
-                $valueToken = $this->parse(substr($raw, $i));
+                $valueToken = $this->parse($raw, $len, $i);
                 if ($valueToken === null) {
                     // invalid value
                     return null;
