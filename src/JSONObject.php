@@ -120,19 +120,11 @@ class JSONObject implements JSONContainer
     #region JSONContainer
     /**
      * @inheritDoc
-     * @return object
+     * @return array<string, JSONEntry>
      */
-    public function entries(): object
+    public function entries(): array
     {
-        $result = [];
-        foreach ($this->entries as $key => $entry) {
-            if ($entry instanceof JSONContainer) {
-                $result[$key] = $entry->entries();
-            } else {// it must be JSONValue
-                $result[$key] = $entry->value();
-            }
-        }
-        return (object)$result;
+        return $this->entries;
     }
 
     /**

@@ -115,15 +115,7 @@ class JSONArray implements JSONContainer
      */
     public function entries(): array
     {
-        $result = [];
-        foreach ($this->entries as $entry) {
-            if ($entry instanceof JSONContainer) {
-                $result[] = $entry->entries();
-            } else {// it must be JSONValue
-                $result[] = $entry->value();
-            }
-        }
-        return $result;
+        return $this->entries;
     }
 
     /**

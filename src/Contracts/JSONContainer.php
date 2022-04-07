@@ -8,12 +8,10 @@ namespace Eboubaker\JSON\Contracts;
 interface JSONContainer extends JSONEntry, JSONEnumerable
 {
     /**
-     * returns a list of entries contained in the container,<br>
-     * if the container is an object it will return a php object containing all the key-value pairs of the json object .<br>
-     * if the container is an array it will return an indexed array of values
-     * @return object<JSONEntry>|array<int,JSONEntry>
+     * returns the list of entries inside this container
+     * @returns array<int|string,JSONEntry>
      */
-    function entries();
+    function entries(): array;
 
     /**
      * serialize the json with applied indentation
