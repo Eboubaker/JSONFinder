@@ -84,7 +84,7 @@ final class UnitTest extends TestCase
         foreach ($found->values() as $key => $item) {
             $str .= ":$key::$item:";
         }
-        $this->assertEquals('ae382b5e2aa479d4711dcaead2003793', md5($str));
+        $this->assertEquals('39a61cb72a0b9d4393863a00f608dc87', md5($str));
     }
 
 }
