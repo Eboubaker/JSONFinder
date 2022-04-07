@@ -1,4 +1,4 @@
-name: Check Tests are passing
+name: CI
 
 on: [push]
 
