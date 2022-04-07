@@ -10,16 +10,16 @@ use PHPUnit\Framework\TestCase;
 
 final class UnitTest extends TestCase
 {
-    private string $rawValid;
-    private string $rawHTML;
+    private string $validJSONString;
+    private string $rawHTMLResponse;
 
     public function setUp(): void
     {
-        if (empty($this->rawValid)) {
-            $this->rawValid = file_get_contents("tests/resources/valid-json.json");
+        if (empty($this->validJSONString)) {
+            $this->validJSONString = file_get_contents("tests/resources/valid-json.json");
         }
-        if (empty($this->rawHTML)) {
-            $this->rawHTML = file_get_contents("tests/resources/html-with-json.txt");
+        if (empty($this->rawHTMLResponse)) {
+            $this->rawHTMLResponse = file_get_contents("tests/resources/html-with-json.txt");
         }
     }
 
@@ -28,9 +28,29 @@ final class UnitTest extends TestCase
      */
     public function testCanParseCleanJson(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->rawValid);
+        $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
         $this->assertCount(1, $parsed);
-        $this->assertEquals(json_encode(json_decode($this->rawValid)), json_encode(json_decode('' . $parsed[0])));
+        $v = json_encode(json_decode('' . $parsed[0]));
+        $this->assertNotEmpty($v);
+        $this->assertEquals(json_encode(json_decode($this->validJSONString)), $v);
+    }
+
+    /**
+     * @covers \Eboubaker\JSON\JSONFinder::toReadableString
+     */
+    public function testReadableStringIsCompatibleWithJsonDecode(): void
+    {
+        $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
+        $v = json_encode(json_decode($parsed[0]->toReadableString(2)));
+        $this->assertNotEmpty($v);
+        $this->assertEquals(json_encode(json_decode($this->validJSONString)), $v);
+
+        $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
+        foreach ($parsed->entries() as $entry) {
+            $decoded = json_decode($entry->toReadableString(2));
+            $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+            $this->assertEquals(json_encode(json_decode(strval($entry))), json_encode($decoded));
+        }
     }
 
     /**
@@ -46,7 +66,7 @@ final class UnitTest extends TestCase
      */
     public function testCanCountEntries(): void
     {
-        $count = (new JSONFinder(JSONFinder::T_ALL))->findJsonEntries($this->rawValid)->countContainedEntries();
+        $count = (new JSONFinder(JSONFinder::T_ALL))->findJsonEntries($this->validJSONString)->countContainedEntries();
         $this->assertEquals(39, $count);
     }
 
@@ -55,7 +75,7 @@ final class UnitTest extends TestCase
      */
     public function testIsCompatibleWithJsonDecode(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->rawValid);
+        $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
         foreach ($parsed as $item) {
             json_decode(strval($item));
             $this->assertEquals(JSON_ERROR_NONE, json_last_error());
@@ -67,7 +87,7 @@ final class UnitTest extends TestCase
      */
     public function testCanFindJsonInHtmlResponse(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->rawHTML);
+        $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
         $this->assertEquals(488, $parsed->countContainedEntries());
     }
 
@@ -76,7 +96,7 @@ final class UnitTest extends TestCase
      */
     public function testCanIterateOverValues(): void
     {
-        $found = (new JSONFinder())->findJsonEntries($this->rawHTML);
+        $found = (new JSONFinder())->findJsonEntries($this->rawHTMLResponse);
         foreach ($found as $key => $item) {
             $this->assertEquals($item, $found[$key]);
         }
