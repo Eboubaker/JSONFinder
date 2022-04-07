@@ -19,7 +19,7 @@ final class UnitTest extends TestCase
             $this->validJSONString = file_get_contents("tests/resources/valid-json.json");
         }
         if (empty($this->rawHTMLResponse)) {
-            $this->rawHTMLResponse = file_get_contents("tests/resources/html-with-json.txt");
+            $this->rawHTMLResponse = file_get_contents("tests/resources/document.html.txt");
         }
     }
 
@@ -88,7 +88,7 @@ final class UnitTest extends TestCase
     public function testCanFindJsonInHtmlResponse(): void
     {
         $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
-        $this->assertEquals(488, $parsed->countContainedEntries());
+        $this->assertEquals(1176, $parsed->countContainedEntries());
     }
 
     /**
@@ -104,7 +104,7 @@ final class UnitTest extends TestCase
         foreach ($found->values() as $key => $item) {
             $str .= ":$key::$item:";
         }
-        $this->assertEquals('39a61cb72a0b9d4393863a00f608dc87', md5($str));
+        $this->assertEquals('20fb1ea35afd63259651a22d3c836b99', md5($str));
     }
 
 }
