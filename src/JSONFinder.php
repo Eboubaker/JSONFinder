@@ -267,7 +267,7 @@ class JSONFinder
             // unexpected end of number
             return null;
         }
-        return new JTokenStruct(new JSONValue($foundDot ? floatval($number) : intval($number)), ($i - $from) + 1);
+        return new JTokenStruct(new JSONValue($foundDot ? floatval($number) : intval($number)), $i - $from);
     }
 
     private function parseArray(string $raw, int $len, int $from): ?JTokenStruct
