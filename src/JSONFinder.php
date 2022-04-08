@@ -282,6 +282,7 @@ class JSONFinder
         }
         $values = [];
         $i = 1 + $from;
+        $lastWasEntry = false;
         $lastWasComma = false;
         while ($i < $len) {
             $i = $this->skipWhitespaces($raw, $i, $len);
@@ -297,13 +298,18 @@ class JSONFinder
                 return new JTokenStruct(new JSONArray($values), ($i - $from) + 1);
             } else if ($raw[$i] === ',') {
                 if ($lastWasComma) {
-                    // there are two consecutive commas, which is invalid
+                    // there are two consecutive commas which is invalid
                     return null;
                 }
                 $lastWasComma = true;
+                $lastWasEntry = false;
                 $i++;
             } else {
                 $lastWasComma = false;
+                if ($lastWasEntry) {
+                    // comma expected between entries
+                    return null;
+                }
                 $token = $this->parse($raw, $len, $i);
                 if ($token === null) {
                     // invalid value
@@ -311,6 +317,7 @@ class JSONFinder
                 }
                 $values[] = $token->entry;
                 $i += $token->length;
+                $lastWasEntry = true;
             }
         }
         // we reached end of string and the array was not closed with ']'
@@ -330,6 +337,7 @@ class JSONFinder
         $values = [];
         $i = 1 + $from;
         $lastWasComma = false;
+        $lastWasEntry = false;
         while ($i < $len) {
             $i = $this->skipWhitespaces($raw, $i, $len);
             if ($i >= $len) {
@@ -344,15 +352,16 @@ class JSONFinder
                 return new JTokenStruct(new JSONObject($values), ($i - $from) + 1);
             } else if ($raw[$i] === ',') {
                 if ($lastWasComma) {
-                    // there are two consecutive commas, which is invalid
+                    // there are two consecutive commas which is invalid
                     return null;
                 }
                 $lastWasComma = true;
+                $lastWasEntry = false;
                 $i++;
             } else {// parse key-value pair
                 $lastWasComma = false;
-                if ($raw[$i] !== '"') {
-                    // expected start of json key
+                if ($lastWasEntry) {
+                    // comma expected between entries
                     return null;
                 }
                 $keyToken = $this->parseString($raw, $len, $i);
@@ -382,6 +391,7 @@ class JSONFinder
                 }
                 $values[strval($keyToken->entry->value)] = $valueToken->entry;
                 $i += $valueToken->length;
+                $lastWasEntry = true;
             }
         }
         // we reached end of string and the object was not closed with '}'
