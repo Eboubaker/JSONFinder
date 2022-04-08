@@ -17,8 +17,8 @@ class JSONObject implements JSONContainer
     private static JSONFinder $valueFinder;
 
     /**
-     * @param array<string,JSONEntry>|object<JSONEntry> $entries
-     * @throws InvalidArgumentException if the array or the object contains a value which is not a {@link JSONEntry}
+     * @param object|array<string,JSONEntry> $entries
+     * @throws InvalidArgumentException if the array or the object contains a tail value which is not a {@link JSONEntry}
      */
     public function __construct($entries)
     {

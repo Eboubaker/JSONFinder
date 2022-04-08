@@ -17,9 +17,8 @@ class JSONArray implements JSONContainer
     private static JSONFinder $valueFinder;
 
     /**
-     * @param array<int,JSONEntry> $entries
-     * @throws InvalidArgumentException if the array contains a value which is not a {@link JSONEntry},
-     * or if the array contains a non integer key
+     * @param array<int,mixed> $entries
+     * @throws InvalidArgumentException if the array contains a non integer key
      */
     public function __construct(array $entries)
     {
