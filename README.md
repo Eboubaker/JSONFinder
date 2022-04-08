@@ -1,5 +1,5 @@
 # JSONFinder
-JSONFinder is a library that can find json values in a mixed text. 
+JSONFinder is a library that can find json values in a mixed text, and converts values to json without 'ext-json' extension. 
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/eboubaker/json-finder.svg?style=flat-square)](https://packagist.org/packages/eboubaker/json-finder)
 [![PHP Version Require](http://poser.pugx.org/eboubaker/json-finder/require/php)](https://packagist.org/packages/phpunit/phpunit)
@@ -46,5 +46,19 @@ foreach($foundEntries->values() as $key => $value) {
 
 // pretty print the json entry with indentation of 2 spaces
 echo $foundEntries->toReadableString(2);
+
+// convert php values into json string without ext-json
+$phpvalue = (object)[
+            'a' => 'b',
+            "e" => [
+                "f" => "g",
+                "h" => (object)[
+                    "i" => "j",
+                    "k" => [1, 2, 3e-13]
+                ]
+            ]
+        ];
+$obj = new JSONObject();
+echo strval($obj);// '{"a":"b","e":{"f":"g","h":{"i":"j","k":[1,2,3.0E-13]}}}'
 ```
 All other functions are self documented.
