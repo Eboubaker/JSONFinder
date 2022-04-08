@@ -4,6 +4,7 @@ namespace Eboubaker\JSON;
 
 use Eboubaker\JSON\Contracts\JSONContainer;
 use Eboubaker\JSON\Contracts\JSONEntry;
+use Eboubaker\JSON\Contracts\JSONStringable;
 use InvalidArgumentException;
 
 /**
@@ -17,8 +18,8 @@ class JSONObject implements JSONContainer
     private static JSONFinder $valueFinder;
 
     /**
-     * @param object|array<string,JSONEntry> $entries
-     * @throws InvalidArgumentException if the array or the object contains a tail value which is not a {@link JSONEntry}
+     * @param object|array<string,JSONEntry|mixed> $entries
+     * @throws InvalidArgumentException if the array or the object contains a tail value which is not a primitive type
      */
     public function __construct($entries)
     {
@@ -26,7 +27,9 @@ class JSONObject implements JSONContainer
         foreach ($entries as $key => $entry) {
             if (!($entry instanceof JSONEntry)) {
                 /** @noinspection DuplicatedCode */
-                if (is_array($entry)) {
+                if ($entry instanceof JSONStringable) {
+                    $this->entries[$key] = new JSONValue($entry);
+                } else if (is_array($entry)) {
                     if (Utils::is_associative($entry)) {
                         $this->entries[$key] = new JSONObject($entry);
                     } else {

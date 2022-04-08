@@ -3,11 +3,11 @@
 namespace Eboubaker\JSON;
 
 use Eboubaker\JSON\Contracts\JSONEntry;
+use Eboubaker\JSON\Contracts\JSONStringable;
 use InvalidArgumentException;
-use LogicException;
 
 /**
- * a json primitive value it's value can be one of string, float, int, bool, null
+ * a json primitive value it's value can be one of string, float, int, bool, null, {@link JSONStringable}
  * @author eboubaker bekkouche <eboubakkar@gmail.com>
  */
 class JSONValue implements JSONEntry
@@ -21,15 +21,15 @@ class JSONValue implements JSONEntry
     private static JSONFinder $valueFinder;
 
     /**
-     * @param $value bool|float|int|string|null
+     * @param $value bool|float|int|string|null|JSONStringable
      * @throws InvalidArgumentException if the value is not one of the allowed types
      */
     public function __construct($value)
     {
-        if ($value === null || is_int($value) || is_float($value) || is_string($value) || is_bool($value)) {
+        if ($value === null || is_int($value) || is_float($value) || is_string($value) || is_bool($value) || $value instanceof JSONStringable) {
             $this->value = $value;
         } else {
-            throw new InvalidArgumentException("value must be a primitive type, \"" . gettype($value) . "\" given");
+            throw new InvalidArgumentException("value must be a primitive type or implement JSONStringable, \"" . gettype($value) . "\" given");
         }
     }
 
@@ -73,8 +73,10 @@ class JSONValue implements JSONEntry
             }
             $string .= "\"";
             return $string;
+        } else if ($this->value instanceof JSONStringable) {
+            return $this->value->toJSONString();
         } else {
-            throw new LogicException("json serialization error: unexpected primitive value type: \"" . gettype($this->value) . "\"");
+            throw new InvalidArgumentException("json serialization error: unexpected value type: \"" . gettype($this->value) . "\"");
         }
     }
 

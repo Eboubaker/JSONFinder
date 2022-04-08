@@ -8,6 +8,9 @@ use Eboubaker\JSON\Contracts\JSONEnumerable;
 use Generator;
 use RecursiveArrayIterator;
 
+/**
+ * @internal
+ */
 trait ArrayOrObject
 {
     /**

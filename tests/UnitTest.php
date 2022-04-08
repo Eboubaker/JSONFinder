@@ -4,6 +4,7 @@ namespace Tests;
 
 require_once "vendor/autoload.php";
 
+use Eboubaker\JSON\Contracts\JSONStringable;
 use Eboubaker\JSON\JSONFinder;
 use Eboubaker\JSON\JSONObject;
 use PHPUnit\Framework\TestCase;
@@ -201,4 +202,21 @@ final class UnitTest extends TestCase
         $this->assertEquals('{"a":"b","c":"d","e":{"f":"g","h":{"i":"j","k":[1,2,3.0E-13]}}}', strval($obj));
     }
 
+    /**
+     * @coversNothing
+     * @testdox can do custom conversion with JSONStringable
+     */
+    public function testCanDoCustomConversionWithJSONStringable(): void
+    {
+        $obj = [
+            "key" => new class implements JSONStringable {
+                public function toJSONString()
+                {
+                    return '["iam","custom"]';
+                }
+            },
+            "z" => "600"
+        ];
+        $this->assertEquals('{"key":["iam","custom"],"z":"600"}', strval(new JSONObject($obj)));
+    }
 }
