@@ -95,7 +95,7 @@ class JSONFinder
     {
         if ($entry instanceof JSONValue) {
             return is_string($entry->value) && $this->allowedTypes & JSONFinder::T_STRING
-                || is_numeric($entry->value) && $this->allowedTypes & JSONFinder::T_NUMBER
+                || (is_numeric($entry->value) && !is_string($entry->value)) && $this->allowedTypes & JSONFinder::T_NUMBER
                 || is_bool($entry->value) && $this->allowedTypes & JSONFinder::T_BOOL
                 || is_null($entry->value) && $this->allowedTypes & JSONFinder::T_NULL;
         } else {
