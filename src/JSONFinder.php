@@ -14,40 +14,53 @@ class JSONFinder
     /**
      * a non empty json array
      */
-    public const T_ARRAY = 0x2;// started from 2 to check "||" from user
+    public const T_ARRAY = 0x2;// started from 2 to check "||" from user and make it invalid
     /**
      * json array with exactly zero elements inside: "[]"
      */
     public const T_EMPTY_ARRAY = 0x4;
     /**
-     * a non empty json object
+     * a non empty object (were value keys are wrapped in quotes '"') (.i.e. {"age":20})
      */
     public const T_OBJECT = 0x8;
     /**
-     * json object with exactly zero elements inside: "{}"
+     * this is a flag that extends other flags, if set to true the finder will also match javascript objects.<br>
+     * a javascript object is were value keys are not wrapped in quotes '"' (.i.e. {age:20}).
      */
-    public const T_EMPTY_OBJECT = 0x10;
+    public const T_JS = 0x10;
+    /**
+     * object with exactly zero elements inside: "{}"
+     */
+    public const T_EMPTY_OBJECT = 0x20;
     /**
      * json string starts and ends with '"'
      */
-    public const T_STRING = 0x20;
+    public const T_STRING = 0x40;
     /**
      * json number : 1,2,1e12,-1,-1.1,3e-12 ...
      */
-    public const T_NUMBER = 0x40;
+    public const T_NUMBER = 0x80;
     /**
      * "true" or "false"
      */
-    public const T_BOOL = 0x80;
+    public const T_BOOL = 0x100;
     /**
      * "null"
      */
-    public const T_NULL = 0x100;
+    public const T_NULL = 0x200;
     /**
-     * all types
+     * all json types, will not include T_JS flag
      */
-    public const T_ALL = 0x1FE;
+    public const T_ALL_JSON = 0x3EE;
 
+    /**
+     * switch all flags to true
+     */
+    private const T_ALL = 0x3FE;
+
+    /**
+     * @var int contains the flags of allowed types
+     */
     private int $allowedTypes;
 
     /**
@@ -56,7 +69,7 @@ class JSONFinder
      */
     public function __construct(int $allowed_types = JSONFinder::T_ARRAY | JSONFinder::T_OBJECT)
     {
-        if ($allowed_types & ~JSONFinder::T_ALL || $allowed_types === 1 || $allowed_types === 0) {
+        if ($allowed_types & ~JSONFinder::T_ALL || $allowed_types === 0) {
             throw new InvalidArgumentException("invalid type: $allowed_types");
         }
         $this->allowedTypes = $allowed_types;
@@ -205,6 +218,61 @@ class JSONFinder
             }
         }
         return null;
+    }
+
+    /**
+     * read through the string characters until an unclosing '"' is found, return string that is between the first non escaped '"' and the last non escaped '"'
+     * @param string $raw
+     * @param int $len
+     * @param int $from
+     * @return JTokenStruct|null
+     */
+    private function parseJSObjectKey(string $raw, int $len, int $from): ?JTokenStruct
+    {
+        $chars = '';
+        $i = $from;
+        while ($i < $len) {
+            // check if character is a valid javascript variable name and add it to $chars if it is valid
+            if (ctype_alpha($raw[$i]) || (ctype_digit($raw[$i]) && $chars !== '') || $raw[$i] === '_' || $raw[$i] === '$') {
+                $chars .= $raw[$i];
+                $i++;
+            } else {
+                // check for a sneaky case where there is a space in the key name
+                // for example this key pair: 'abd c: "value"'
+                $j = $i;
+                while ($j < $len && $raw[$j] === ' ') {
+                    $j++;
+                }
+                if ($j < $len && $raw[$j] !== ':') {
+                    return null;
+                }
+                // found a valid key name
+                break;
+            }
+        }
+        if ($chars !== '' && !$this->isJavaScriptKeyword($chars, true)) {
+            return new JTokenStruct(new JSONValue($chars), $i - $from);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * returns true if str is a reserved javascript keyword
+     */
+    private function isJavaScriptKeyword(string $str, bool $strict = false): bool
+    {
+        if (in_array($str, array(
+            // KEYWORDS
+            'break', 'case', 'catch', 'class', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'enum', 'export', 'extends', 'import', 'super',
+            // BOOLEAN
+            'true', 'false',
+            // NULL
+            'null'))) {
+            return true;
+        }
+        // strict mode reserved keywords
+        return $strict && in_array($str, array('implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield'));
     }
 
     /**
@@ -364,9 +432,23 @@ class JSONFinder
                     // comma expected between entries
                     return null;
                 }
-                $keyToken = $this->parseString($raw, $len, $i);
-                if ($keyToken === null || (!$keyToken->entry instanceof JSONValue) || (!is_string($keyToken->entry->value) && !is_string($keyToken->entry->value))) {
-                    // invalid json key, must be string
+                $keyToken = null;
+                if ($raw[$i] === '"') {
+                    // start of json key
+                    $jsonKey = $this->parseString($raw, $len, $i);
+                    if ($jsonKey !== null && $jsonKey->entry instanceof JSONValue && is_string($jsonKey->entry->value)) {
+                        // valid json key
+                        $keyToken = $jsonKey;
+                    }
+                } else if ($this->allowedTypes & JSONFinder::T_JS) {
+                    $jsKey = $this->parseJSObjectKey($raw, $len, $i);
+                    if ($jsKey !== null && $jsKey->entry instanceof JSONValue && is_string($jsKey->entry->value)) {
+                        // valid js key
+                        $keyToken = $jsKey;
+                    }
+                }
+                if ($keyToken === null) {
+                    // invalid key
                     return null;
                 }
                 $i = $this->skipWhitespaces($raw, $i + $keyToken->length, $len);
@@ -403,7 +485,7 @@ class JSONFinder
      * @param string $raw raw json string
      * @param $i int start from this index
      * @param $len int length of raw json string
-     * @return int new index where character is not whitespace
+     * @return int new index where character is not a json whitespace
      */
     private static function skipWhitespaces(string $raw, int $i, int $len): int
     {
