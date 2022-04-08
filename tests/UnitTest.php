@@ -5,6 +5,7 @@ namespace Tests;
 require_once "vendor/autoload.php";
 
 use Eboubaker\JSON\JSONFinder;
+use Eboubaker\JSON\JSONObject;
 use PHPUnit\Framework\TestCase;
 
 
@@ -178,4 +179,26 @@ final class UnitTest extends TestCase
         $this->assertEquals($a_obj, $count(JSONFinder::T_EMPTY_OBJECT | JSONFinder::T_OBJECT | JSONFinder::T_JS));
         $this->assertEquals($all, $count(JSONFinder::T_ALL_JSON | JSONFinder::T_JS));
     }
+
+
+    /**
+     * checks if we can convert a php variable into json string.
+     * @coversNothing
+     */
+    public function testCanEncodeObjects(): void
+    {
+        $obj = new JSONObject((object)[
+            'a' => 'b',
+            'c' => 'd',
+            "e" => [
+                "f" => "g",
+                "h" => (object)[
+                    "i" => "j",
+                    "k" => [1, 2, 3e-13]
+                ]
+            ]
+        ]);
+        $this->assertEquals('{"a":"b","c":"d","e":{"f":"g","h":{"i":"j","k":[1,2,3.0E-13]}}}', strval($obj));
+    }
+
 }
