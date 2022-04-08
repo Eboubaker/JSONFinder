@@ -196,7 +196,7 @@ class JSONFinder
                         // invalid hex char-code
                         return null;
                     }
-                    $chars .= chr(hexdec($hex));
+                    $chars .= html_entity_decode("&#x$hex;", ENT_COMPAT, 'UTF-8');
                     $i += 5;
                 } //@formatter:off
                 else if($code === '"') { $chars .= '"' ;$i++; }
