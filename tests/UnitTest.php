@@ -54,11 +54,12 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\JSONFinder::findJsonEntries
+     * @covers \Eboubaker\JSON\JSONFinder::toReadableString
      */
-    public function testCanFindJsonInText(): void
+    public function testToReadableStringDidNotChangeOutCome(): void
     {
-        $this->assertEquals(true, true);
+        $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
+        $this->assertEquals("567ce8bd75a13b9c8277f0c0bf526c94", md5($parsed->toReadableString(2)));
     }
 
     /**
