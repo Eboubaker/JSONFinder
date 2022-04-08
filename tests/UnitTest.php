@@ -24,7 +24,7 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\JSONFinder::findJsonEntries
+     * @coversNothing
      */
     public function testCanParseCleanJson(): void
     {
@@ -36,7 +36,7 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\JSONFinder::toReadableString
+     * @coversNothing
      */
     public function testReadableStringIsCompatibleWithJsonDecode(): void
     {
@@ -54,7 +54,7 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\JSONFinder::toReadableString
+     * @coversNothing
      */
     public function testToReadableStringDidNotChangeOutCome(): void
     {
@@ -63,7 +63,7 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\Contracts\JSONEnumerable::countContainedEntries
+     * @coversNothing
      */
     public function testCanCountEntries(): void
     {
@@ -72,7 +72,7 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\JSONFinder::findJsonEntries
+     * @coversNothing
      */
     public function testIsCompatibleWithJsonDecode(): void
     {
@@ -84,7 +84,7 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\JSONFinder::findJsonEntries
+     * @coversNothing
      */
     public function testCanFindJsonInHtmlResponse(): void
     {
@@ -93,19 +93,19 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @covers \Eboubaker\JSON\Contracts\JSONEnumerable::countContainedEntries
+     * @coversNothing
      */
-    public function testCanIterateOverValues(): void
+    public function testCanIterateOverValuesAndAccessWithArraySyntax(): void
     {
         $found = (new JSONFinder())->findJsonEntries($this->rawHTMLResponse);
-        foreach ($found as $key => $item) {
-            $this->assertEquals($item, $found[$key]);
-        }
         $str = '';
         foreach ($found->values() as $key => $item) {
             $str .= ":$key::$item:";
         }
         $this->assertEquals('20fb1ea35afd63259651a22d3c836b99', md5($str));
+        foreach ($found as $key => $item) {
+            $this->assertEquals($item, $found[$key]);
+        }
     }
 
 }
