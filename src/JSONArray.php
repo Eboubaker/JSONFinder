@@ -2,13 +2,9 @@
 
 namespace Eboubaker\JSON;
 
-use ArrayIterator;
 use Eboubaker\JSON\Contracts\JSONContainer;
 use Eboubaker\JSON\Contracts\JSONEntry;
-use Eboubaker\JSON\Contracts\JSONEnumerable;
-use Generator;
 use InvalidArgumentException;
-use RecursiveArrayIterator;
 
 /**
  * array which contains {@link JSONEntry}s
@@ -16,10 +12,9 @@ use RecursiveArrayIterator;
  */
 class JSONArray implements JSONContainer
 {
-    /**
-     * @var array<int,JSONEntry>
-     */
-    private array $entries;
+    use ArrayOrObject;
+
+    private static JSONFinder $valueFinder;
 
     /**
      * @param array<int,JSONEntry> $entries
@@ -28,26 +23,28 @@ class JSONArray implements JSONContainer
      */
     public function __construct(array $entries)
     {
+        $this->entries = [];
         foreach ($entries as $key => $entry) {
             if (!is_int($key)) {
                 throw new InvalidArgumentException("array keys must be integers, " . gettype($key) . "($key) given");
             }
-            if (!($entry instanceof JSONEntry)) {
-                throw new InvalidArgumentException("array entries must be of type JSONEntry, " . gettype($entry) . " given at index " . $key);
+            if (!$entry instanceof JSONEntry) {
+                /** @noinspection DuplicatedCode */
+                if (is_array($entry)) {
+                    if (Utils::is_associative($entry)) {
+                        $this->entries[] = new JSONObject($entry);
+                    } else {
+                        $this->entries[] = new JSONArray($entry);
+                    }
+                } else if (is_object($entry)) {
+                    $this->entries[] = new JSONObject($entry);
+                } else {
+                    $this->entries[] = new JSONValue($entry);
+                }
+            } else {
+                $this->entries[$key] = $entry;
             }
         }
-        $this->entries = $entries;
-    }
-
-    #region JSONEntry
-
-    /**
-     * returns self (this array)
-     * @return $this
-     */
-    public function value(): JSONArray
-    {
-        return $this;
     }
 
     /**
@@ -57,65 +54,6 @@ class JSONArray implements JSONContainer
     public function __toString(): string
     {
         return "[" . implode(",", $this->entries) . "]";
-    }
-    #endregion JSONEntry
-
-    #region JSONEnumerable
-    /**
-     * @inheritDoc
-     * @return array<int, bool|string|int|float|null|array> indexed array of (primitive types or other associative or indexed arrays)
-     */
-    public function assoc(): array
-    {
-        $result = [];
-        foreach ($this->entries as $entry) {
-            if ($entry instanceof JSONEnumerable) {
-                $result[] = $entry->assoc();
-            } else {// it must be JSONValue
-                $result[] = $entry->value();
-            }
-        }
-        return $result;
-    }
-
-    public function countContainedEntries(): int
-    {
-        $count = 0;
-        foreach ($this->entries as $entry) {
-            if ($entry instanceof JSONEnumerable) {
-                $count += $entry->countContainedEntries();
-            } else {
-                $count++;
-            }
-        }
-        return $count;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function values(): Generator
-    {
-        foreach ($this->entries as $key => $entry) {
-            if ($entry instanceof JSONEnumerable) {
-                foreach ($entry->values() as $k => $value) {
-                    yield $k => $value;
-                }
-            } else {// it must be JSONValue
-                yield $key => $entry->value();
-            }
-        }
-    }
-    #endregion JSONEnumerable
-
-    #region JSONContainer
-    /**
-     * @inheritDoc
-     * @return array<int,JSONEntry>
-     */
-    public function entries(): array
-    {
-        return $this->entries;
     }
 
     /**
@@ -138,6 +76,7 @@ class JSONArray implements JSONContainer
         $count = 0;
         foreach ($this->entries as $entry) {
             $str .= str_repeat(" ", $indent);
+            /** @noinspection DuplicatedCode */
             if ($entry instanceof JSONArray || $entry instanceof JSONObject) {
                 $str .= $entry->__toReadableString($indent + $indentIncrease, $indentIncrease);
             } else {// it must be JSONValue
@@ -158,60 +97,17 @@ class JSONArray implements JSONContainer
         return $str;
     }
 
-    public function count(): int
-    {
-        return count($this->entries);
-    }
-    #endregion JSONContainer
 
-    #region PHP
-    #region ArrayAccess
-    /**
-     * @internal this method is not part of the public API
-     */
-    public function offsetExists($offset): bool
+    public function serialize(): string
     {
-        return isset($this->entries[$offset]);
+        return strval($this);
     }
 
-    /**
-     * @internal this method is not part of the public API
-     */
-    public function offsetGet($offset)
+    public function unserialize($data)
     {
-        return $this->entries[$offset];
-    }
-
-    /**
-     * @internal this method is not part of the public API
-     */
-    public function offsetSet($offset, $value)
-    {
-        if (!($value instanceof JSONEntry)) {
-            $this->entries[$offset] = $value;
-        } else {
-            $this->entries[$offset] = new JSONValue($value);
+        if(self::$valueFinder === null) {
+            self::$valueFinder = new JSONFinder(JSONFinder::T_ARRAY);
         }
-        $this->entries[$offset] = $value;
+        return self::$valueFinder->findJsonEntries($data)[0] ?? null;
     }
-
-    /**
-     * @internal this method is not part of the public API
-     */
-    public function offsetUnset($offset)
-    {
-        unset($this->entries[$offset]);
-    }
-    #endregion ArrayAccess
-
-    #region IteratorAggregate
-    /**
-     * @internal this method is not part of the public API
-     */
-    public function getIterator(): ArrayIterator
-    {
-        return new RecursiveArrayIterator($this->entries);
-    }
-    #endregion IteratorAggregate
-    #endregion
 }

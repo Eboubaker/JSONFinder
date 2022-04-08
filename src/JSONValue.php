@@ -18,6 +18,8 @@ class JSONValue implements JSONEntry
      */
     public $value;
 
+    private static JSONFinder $valueFinder;
+
     /**
      * @param $value bool|float|int|string|null
      * @throws InvalidArgumentException if the value is not one of the allowed types
@@ -75,5 +77,25 @@ class JSONValue implements JSONEntry
             throw new LogicException("json serialization error: unexpected primitive value type: \"" . gettype($this->value) . "\"");
         }
     }
-    #endregion JSONEntry
+
+    public function serialize(): string
+    {
+        return strval($this);
+    }
+
+    /**
+     * @throws InvalidArgumentException if data is not string or if no value found inside data
+     */
+    public function unserialize($data): JSONValue
+    {
+        if (self::$valueFinder === null) {
+            self::$valueFinder = new JSONFinder([
+                JSONFinder::T_STRING,
+                JSONFinder::T_BOOLEAN,
+                JSONFinder::T_NULL,
+                JSONFinder::T_NUMBER
+            ]);
+        }
+        return self::$valueFinder->findJsonEntries($data)[0];
+    }
 }

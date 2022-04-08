@@ -25,7 +25,7 @@ class JSONFinder
     public const T_NUMBER = 4;
     public const T_BOOLEAN = 5;
     public const T_NULL = 6;
-    public const T_ALL = [self::T_ARRAY, self::T_OBJECT, self::T_STRING, self::T_NUMBER, self::T_BOOLEAN, self::T_NULL];
+    public const T_ALL = 7;
 
     private bool $T_OBJECT_ALLOWED = false;
     private bool $T_EMPTY_OBJECT_ALLOWED = false;
@@ -43,8 +43,22 @@ class JSONFinder
     public function __construct($allowed_types = [JSONFinder::T_ARRAY, JSONFinder::T_OBJECT])
     {
         if (!is_array($allowed_types)) {
-            if ($allowed_types === JSONFinder::T_ALL) {
-                allow_all_types:
+            $allowed_types = [$allowed_types];
+        }
+
+        foreach ($allowed_types as $t) {
+            if (!is_int($t)) {
+                throw new InvalidArgumentException('invalid type in the array of allowed types, expected int got ' . gettype($t));
+            }
+            if ($t === JSONFinder::T_OBJECT) $this->T_OBJECT_ALLOWED = true;
+            else if ($t === JSONFinder::T_EMPTY_OBJECT) $this->T_EMPTY_OBJECT_ALLOWED = true;
+            else if ($t === JSONFinder::T_ARRAY) $this->T_ARRAY_ALLOWED = true;
+            else if ($t === JSONFinder::T_EMPTY_ARRAY) $this->T_EMPTY_ARRAY_ALLOWED = true;
+            else if ($t === JSONFinder::T_STRING) $this->T_STRING_ALLOWED = true;
+            else if ($t === JSONFinder::T_NUMBER) $this->T_NUMBER_ALLOWED = true;
+            else if ($t === JSONFinder::T_BOOLEAN) $this->T_BOOLEAN_ALLOWED = true;
+            else if ($t === JSONFinder::T_NULL) $this->T_NULL_ALLOWED = true;
+            else if ($t === JSONFinder::T_ALL) {
                 $this->T_OBJECT_ALLOWED = true;
                 $this->T_EMPTY_OBJECT_ALLOWED = true;
                 $this->T_ARRAY_ALLOWED = true;
@@ -53,28 +67,16 @@ class JSONFinder
                 $this->T_NUMBER_ALLOWED = true;
                 $this->T_BOOLEAN_ALLOWED = true;
                 $this->T_NULL_ALLOWED = true;
+                break;
             } else {
-                throw new InvalidArgumentException("Invalid type provided for the allowed types parameter");
-            }
-        } else {
-            foreach ($allowed_types as $t) {
-                if ($t === JSONFinder::T_OBJECT) $this->T_OBJECT_ALLOWED = true;
-                else if ($t === JSONFinder::T_EMPTY_OBJECT) $this->T_EMPTY_OBJECT_ALLOWED = true;
-                else if ($t === JSONFinder::T_ARRAY) $this->T_ARRAY_ALLOWED = true;
-                else if ($t === JSONFinder::T_EMPTY_ARRAY) $this->T_EMPTY_ARRAY_ALLOWED = true;
-                else if ($t === JSONFinder::T_STRING) $this->T_STRING_ALLOWED = true;
-                else if ($t === JSONFinder::T_NUMBER) $this->T_NUMBER_ALLOWED = true;
-                else if ($t === JSONFinder::T_BOOLEAN) $this->T_BOOLEAN_ALLOWED = true;
-                else if ($t === JSONFinder::T_NULL) $this->T_NULL_ALLOWED = true;
-                else if ($t === JSONFinder::T_ALL) goto allow_all_types;
-                else throw new InvalidArgumentException("Invalid type $t");
+                throw new InvalidArgumentException("invalid type $t");
             }
         }
     }
 
     /**
      * find all possible valid json tokens in the given string
-     * @return JSONArray all found {@link JSONEntries} in the string inside a {@link JSONArray}
+     * @return JSONArray {@link JSONArray} of all found {@link JSONEntry}s in the string
      */
     public function findJsonEntries(string $text): JSONArray
     {
@@ -110,11 +112,11 @@ class JSONFinder
                 || is_bool($entry->value) && $this->T_BOOLEAN_ALLOWED
                 || is_null($entry->value) && $this->T_NULL_ALLOWED;
         } else {
-            if($entry instanceof JSONObject && $this->T_OBJECT_ALLOWED){
+            if ($entry instanceof JSONObject && $this->T_OBJECT_ALLOWED) {
                 return $entry->count() > 0 || $this->T_EMPTY_OBJECT_ALLOWED;
-            }else if($entry instanceof JSONArray && $this->T_ARRAY_ALLOWED){
+            } else if ($entry instanceof JSONArray && $this->T_ARRAY_ALLOWED) {
                 return $entry->count() > 0 || $this->T_EMPTY_ARRAY_ALLOWED;
-            }else{
+            } else {
                 return false;
             }
         }
@@ -279,7 +281,7 @@ class JSONFinder
             // not start of array
             return null;
         }
-        if ($from+1 >= $len) {
+        if ($from + 1 >= $len) {
             // array not closed
             return null;
         }
@@ -326,7 +328,7 @@ class JSONFinder
             // not start of object
             return null;
         }
-        if ($from+1 >= $len) {
+        if ($from + 1 >= $len) {
             // object not closed
             return null;
         }
@@ -412,5 +414,4 @@ class JSONFinder
         // $raw[$i] is not whitespace, or reached end of string
         return $i;
     }
-    #endregion
 }
