@@ -58,7 +58,7 @@ $phpvalue = (object)[
                 ]
             ]
         ];
-$obj = new JSONObject();
+$obj = new JSONObject($phpvalue);
 echo strval($obj);// '{"a":"b","e":{"f":"g","h":{"i":"j","k":[1,2,3.0E-13]}}}'
 ```
 All other functions are self documented.
