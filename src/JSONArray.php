@@ -103,11 +103,11 @@ class JSONArray implements JSONContainer
         return strval($this);
     }
 
-    public function unserialize($data)
+    public function unserialize($data): JSONArray
     {
-        if(self::$valueFinder === null) {
-            self::$valueFinder = new JSONFinder(JSONFinder::T_ARRAY);
+        if (self::$valueFinder === null) {
+            self::$valueFinder = new JSONFinder(JSONFinder::T_ARRAY | JSONFinder::T_EMPTY_OBJECT);
         }
-        return self::$valueFinder->findJsonEntries($data)[0] ?? null;
+        return self::$valueFinder->findJsonEntries($data)[0];
     }
 }
