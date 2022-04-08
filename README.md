@@ -16,6 +16,7 @@ composer require eboubaker/json-finder
 suppose you want to extract all json from an http response (from &lt;script&gt; tags).
 ```php
 use Eboubaker\JSON\JSONFinder;
+use Eboubaker\JSON\JSONObject;
 
 $html = file_get_contents('http://www.youtube.com');
 $finder = new JSONFinder();
