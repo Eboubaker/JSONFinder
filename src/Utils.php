@@ -9,12 +9,12 @@ namespace Eboubaker\JSON;
 final class Utils
 {
     /**
-     * returns true if array contains a string key. and false if array keys are all integers
+     * returns true if $enumerable contains a string key. and false if $enumerable keys are all integers
      */
-    static function is_associative(array $array): bool
+    static function is_associative($enumerable): bool
     {
-        for ($i = 0, $len = count($array); $i < $len; $i++) {
-            if (!is_int($array[$i])) {
+        foreach ($enumerable as $key => $v) {
+            if (!is_int($key)) {
                 return true;
             }
         }

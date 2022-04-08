@@ -28,14 +28,14 @@ class JSONObject implements JSONContainer
                 /** @noinspection DuplicatedCode */
                 if (is_array($entry)) {
                     if (Utils::is_associative($entry)) {
-                        $this->entries[] = new JSONObject($entry);
+                        $this->entries[$key] = new JSONObject($entry);
                     } else {
-                        $this->entries[] = new JSONArray($entry);
+                        $this->entries[$key] = new JSONArray($entry);
                     }
                 } else if (is_object($entry)) {
-                    $this->entries[] = new JSONObject($entry);
+                    $this->entries[$key] = new JSONObject($entry);
                 } else {
-                    $this->entries[] = new JSONValue($entry);
+                    $this->entries[$key] = new JSONValue($entry);
                 }
             }else{
                 $this->entries[$key] = $entry;
