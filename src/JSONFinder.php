@@ -361,7 +361,7 @@ class JSONFinder
             }
             if ($raw[$i] === ']') {
                 if ($lastWasComma) {
-                    // comma without a value after is incorrect
+                    // incorrect: comma without a value after it.
                     return null;
                 }
                 return new JTokenStruct(new JSONArray($values), ($i - $from) + 1);
@@ -370,13 +370,12 @@ class JSONFinder
                     // there are two consecutive commas which is invalid
                     return null;
                 }
+                $i++;
                 $lastWasComma = true;
                 $lastWasEntry = false;
-                $i++;
             } else {
-                $lastWasComma = false;
                 if ($lastWasEntry) {
-                    // comma expected between entries
+                    // comma expected between two entries
                     return null;
                 }
                 $token = $this->parse($raw, $len, $i);
@@ -386,6 +385,7 @@ class JSONFinder
                 }
                 $values[] = $token->entry;
                 $i += $token->length;
+                $lastWasComma = false;
                 $lastWasEntry = true;
             }
         }
@@ -415,7 +415,7 @@ class JSONFinder
             }
             if ($raw[$i] === '}') {
                 if ($lastWasComma) {
-                    // comma without a key-value pair after is incorrect
+                    // incorrect: comma without a key-value pair after it.
                     return null;
                 }
                 return new JTokenStruct(new JSONObject($values), ($i - $from) + 1);
@@ -424,13 +424,12 @@ class JSONFinder
                     // there are two consecutive commas which is invalid
                     return null;
                 }
+                $i++;
                 $lastWasComma = true;
                 $lastWasEntry = false;
-                $i++;
-            } else {// parse key-value pair
-                $lastWasComma = false;
+            } else {// try parse key-value pair
                 if ($lastWasEntry) {
-                    // comma expected between entries
+                    // comma expected between two key-value pairs
                     return null;
                 }
                 $keyToken = null;
@@ -474,6 +473,7 @@ class JSONFinder
                 }
                 $values[strval($keyToken->entry->value())] = $valueToken->entry;
                 $i += $valueToken->length;
+                $lastWasComma = false;
                 $lastWasEntry = true;
             }
         }

@@ -187,12 +187,12 @@ final class UnitTest extends TestCase
      */
     public function testCanEncodeObjects(): void
     {
-        $obj = new JSONObject((object)[
+        $obj = new JSONObject([
             'a' => 'b',
             'c' => 'd',
             "e" => [
                 "f" => "g",
-                "h" => (object)[
+                "h" => [
                     "i" => "j",
                     "k" => [1, 2, 3e-13]
                 ]
