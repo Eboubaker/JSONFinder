@@ -30,17 +30,17 @@ $foundEntries = $finder->findJsonEntries($html);
 $associative = $foundEntries->assoc();
 
 // 4th entry in the JSONArray
-$first = $foundEntries[3];
+$entry = $foundEntries[3];
 
 // get json string of the first entry (similar to json_encode)
-$jsonString = strval($first);
+$jsonString = strval($entry);
 
 // loop through entries of the JSONArray ($foundEntries)
 foreach($foundEntries as $key => $value) {
     // ....
 }
 
-// loop through every deeply nested value(primitive values)
+// loop through every deeply nested primitive value (string, number, boolean, null)
 foreach($foundEntries->values() as $key => $value) {
     // ....
 }
@@ -49,17 +49,17 @@ foreach($foundEntries->values() as $key => $value) {
 echo $foundEntries->toReadableString(2);
 
 // convert php values into json string without ext-json
-$phpvalue = (object)[
-            'a' => 'b',
+$phpvalue = [
+            "a" => "b",
             "e" => [
-                "f" => "g",
-                "h" => (object)[
+                "f" => null,
+                "h" => [
                     "i" => "j",
-                    "k" => [1, 2, 3e-13]
+                    "k" => [1, 2, 3e-13, ["x": 0.3]]
                 ]
             ]
         ];
 $obj = new JSONObject($phpvalue);
-echo strval($obj);// '{"a":"b","e":{"f":"g","h":{"i":"j","k":[1,2,3.0E-13]}}}'
+echo strval($obj);// '{"a":"b","e":{"f":null,"h":{"i":"j","k":[1,2,3.0E-13,{"x":0.3}]}}}'
 ```
 All other functions are self documented.
