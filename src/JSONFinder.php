@@ -232,7 +232,7 @@ class JSONFinder
         $chars = '';
         $i = $from;
         while ($i < $len) {
-            // check if character is a valid javascript variable name and add it to $chars if it is valid
+            // check if character is allowed in javascript variable declaration and add it to $chars if it is valid
             if (ctype_alpha($raw[$i]) || (ctype_digit($raw[$i]) && $chars !== '') || $raw[$i] === '_' || $raw[$i] === '$') {
                 $chars .= $raw[$i];
                 $i++;
@@ -259,6 +259,7 @@ class JSONFinder
 
     /**
      * returns true if str is a reserved javascript keyword
+     * the logic is from ECMAScript 5.1 spec: http://es5.github.io/x7.html#x7.6.1
      */
     private function isJavaScriptKeyword(string $str, bool $strict = false): bool
     {
@@ -327,7 +328,7 @@ class JSONFinder
             }
             $i++;
         }
-        if ($number === '') {// should not happen, but just in case something went wrong above
+        if ($number === '') {// should not happen, but just in case something went wrong above, or if for some reason $i was at the end of the string
             return null;
         }
         $lastChar = $number[strlen($number) - 1];
