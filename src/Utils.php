@@ -4,7 +4,7 @@ namespace Eboubaker\JSON;
 
 /**
  * @author Eboubaker Bekkouche <eboubakkar@gmail.com>
- * @internal
+ * @internal this class is not part of the public API
  */
 final class Utils
 {

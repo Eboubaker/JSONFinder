@@ -101,7 +101,7 @@ final class UnitTest extends TestCase
     public function testCanCountAllContainedEntries(): void
     {
         $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
-        $this->assertEquals(1732, $parsed->countContainedEntries());
+        $this->assertEquals(1732, $parsed->countAll());
     }
 
     /**
@@ -110,7 +110,7 @@ final class UnitTest extends TestCase
     public function testCanCountAllContainedEntriesWithJS(): void
     {
         $parsed = (new JSONFinder(JSONFinder::T_ARRAY | JSONFinder::T_OBJECT | JSONFinder::T_JS))->findJsonEntries($this->rawHTMLResponse);
-        $this->assertEquals(1857, $parsed->countContainedEntries());
+        $this->assertEquals(1857, $parsed->countAll());
     }
 
     /**
@@ -125,7 +125,6 @@ final class UnitTest extends TestCase
         }
         $this->assertEquals('3eabae12402f4d558476c0f29a57abb2', md5($str));
         foreach ($found as $key => $item) {
-            /** @noinspection PhpArrayAccessCanBeReplacedWithForeachValueInspection */
             $this->assertEquals($item, $found[$key]);
         }
     }
@@ -210,7 +209,7 @@ final class UnitTest extends TestCase
     {
         $obj = [
             "key" => new class implements JSONStringable {
-                public function toJSONString()
+                public function toJSONString(): string
                 {
                     return '["iam","custom"]';
                 }

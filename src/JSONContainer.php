@@ -2,21 +2,24 @@
 
 namespace Eboubaker\JSON;
 
+use ArrayAccess;
 use ArrayIterator;
+use Countable;
 use Eboubaker\JSON\Contracts\JSONEntry;
-use Eboubaker\JSON\Contracts\JSONEnumerable;
 use Generator;
+use IteratorAggregate;
 use RecursiveArrayIterator;
 
 /**
+ * shared logic between {@link JSONArray} and {@link JSONObject}
  * @internal
  */
-trait ArrayOrObject
+abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregate, Countable
 {
     /**
-     * @var array<int,JSONEntry>
+     * @var array<int|string,JSONEntry>
      */
-    private array $entries;
+    protected array $entries;
 
     /**
      * json container always returns itself
@@ -28,13 +31,15 @@ trait ArrayOrObject
         return $this;
     }
 
-
-    public function countContainedEntries(): int
+    /**
+     * query the number of all stored/nested values
+     */
+    public function countAll(): int
     {
         $count = 0;
         foreach ($this->entries as $entry) {
-            if ($entry instanceof JSONEnumerable) {
-                $count += $entry->countContainedEntries();
+            if ($entry instanceof JSONContainer) {
+                $count += $entry->countAll();
             } else {
                 $count++;
             }
@@ -43,12 +48,12 @@ trait ArrayOrObject
     }
 
     /**
-     * @inheritDoc
+     * returns an iterator of all nested primitive values
      */
     public function values(): Generator
     {
         foreach ($this->entries as $key => $entry) {
-            if ($entry instanceof JSONEnumerable) {
+            if ($entry instanceof JSONContainer) {
                 foreach ($entry->values() as $k => $value) {
                     yield $k => $value;
                 }
@@ -58,7 +63,9 @@ trait ArrayOrObject
         }
     }
 
-
+    /**
+     * returns count of entries
+     */
     public function count(): int
     {
         return count($this->entries);
@@ -110,8 +117,8 @@ trait ArrayOrObject
     }
 
     /**
-     * @inheritDoc
-     * @return array<JSONEntry>
+     * returns the list of entries inside this container
+     * @returns array<int|string,JSONEntry>
      */
     public function entries(): array
     {
@@ -119,14 +126,14 @@ trait ArrayOrObject
     }
 
     /**
-     * @inheritDoc
-     * @return array<int|string, bool|string|int|float|null|array> convert the container structure to a nested associative array of primitive types
+     * converts the container structure to a nested associative array of primitive types
+     * @return array<string|int, bool|string|int|float|null|array> associative or indexed array of primitive types or other associative or indexed arrays
      */
     public function assoc(): array
     {
         $result = [];
         foreach ($this->entries as $key => $entry) {
-            if ($entry instanceof JSONEnumerable) {
+            if ($entry instanceof JSONContainer) {
                 $result[$key] = $entry->assoc();
             } else {// it must be JSONValue
                 $result[$key] = $entry->value();
@@ -135,4 +142,15 @@ trait ArrayOrObject
         return $result;
     }
 
+    public function serialize(): string
+    {
+        return strval($this);
+    }
+
+    /**
+     * serialize the json with applied indentation
+     * @param int $indent number of spaces to indent
+     * @return string returns the prettified json
+     */
+    abstract function toReadableString(int $indent): string;
 }

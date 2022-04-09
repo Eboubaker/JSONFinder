@@ -2,7 +2,6 @@
 
 namespace Eboubaker\JSON;
 
-use Eboubaker\JSON\Contracts\JSONContainer;
 use Eboubaker\JSON\Contracts\JSONEntry;
 use Eboubaker\JSON\Contracts\JSONStringable;
 use InvalidArgumentException;
@@ -11,10 +10,8 @@ use InvalidArgumentException;
  * array which contains {@link JSONEntry}s
  * @author eboubaker bekkouche <eboubakkar@gmail.com>
  */
-class JSONArray implements JSONContainer
+class JSONArray extends JSONContainer
 {
-    use ArrayOrObject;
-
     private static JSONFinder $valueFinder;
 
     /**
@@ -97,12 +94,6 @@ class JSONArray implements JSONContainer
         }
         $str .= ']';
         return $str;
-    }
-
-
-    public function serialize(): string
-    {
-        return strval($this);
     }
 
     public function unserialize($data): JSONArray

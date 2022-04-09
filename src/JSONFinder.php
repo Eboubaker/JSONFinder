@@ -14,13 +14,13 @@ class JSONFinder
     /**
      * a non empty json array
      */
-    public const T_ARRAY = 0x2;// started from 2 to check "||" from user and make it invalid
+    public const T_ARRAY = 0x2;
     /**
      * json array with exactly zero elements inside: "[]"
      */
     public const T_EMPTY_ARRAY = 0x4;
     /**
-     * a non empty object (were value keys are wrapped in quotes '"') (.i.e. {"age":20})
+     * a non empty object .i.e. {"age":20}
      */
     public const T_OBJECT = 0x8;
     /**
