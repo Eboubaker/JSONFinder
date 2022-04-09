@@ -14,7 +14,7 @@ class JSONValue implements JSONEntry
 {
     /**
      * the value that this entry holds
-     * @var bool|float|int|string|null
+     * @var bool|float|int|string|null|JSONStringable
      */
     public $value;
 

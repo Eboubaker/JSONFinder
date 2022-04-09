@@ -14,7 +14,7 @@ interface JSONEntry extends Serializable
 {
     /**
      * returns value contained in the entry
-     * @return bool|string|int|float|null|JSONArray|JSONObject
+     * @return bool|string|int|float|null|JSONArray|JSONObject|JSONStringable
      */
     function value();
 

@@ -471,7 +471,7 @@ class JSONFinder
                     // invalid value
                     return null;
                 }
-                $values[strval($keyToken->entry->value)] = $valueToken->entry;
+                $values[strval($keyToken->entry->value())] = $valueToken->entry;
                 $i += $valueToken->length;
                 $lastWasEntry = true;
             }
