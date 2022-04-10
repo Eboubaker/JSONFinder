@@ -219,4 +219,56 @@ final class UnitTest extends TestCase
         ];
         $this->assertEquals('{"key":["iam","custom"],"z":"600"}', strval(new JSONObject($obj)));
     }
+
+    /**
+     * @coversNothing
+     */
+    public function testCanQueryValues(): void
+    {
+        $obj = new JSONObject([
+            'a' => 'b',
+            'c' => 'd',
+            "e" => [
+                "f" => "g",
+                "h" => [
+                    "i" => "j",
+                    "k" => [1, 2, 3e-13]
+                ],
+                "l" => [
+                    "i" => 1,
+                    "m" => "n",
+                    "o" => [
+                        "extra" => [
+                            "r" => "m"
+                        ],
+                        "p" => [
+                            "extra" => [
+                                "r" => "s"
+                            ],
+                            "M" => [
+                                "q" => [
+                                    "extra" => [
+                                        "r" => "s",
+                                        "t" => [
+                                            "u" => "v",
+                                            "w" => [
+                                                "x" => "y"
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        "r" => [1, 5, 3e-13]
+                    ]
+                ]
+            ]
+        ]);
+        $this->assertEquals('b', array_values($obj->get('a'))[0]->value());
+        $this->assertEquals('g', array_values($obj->get('e.f'))[0]->value());
+        $this->assertCount(2, $obj->get('e.*.i'));
+        $this->assertCount(1, $obj->get('e.*.i', fn($v) => $v->value() === 'j'));
+        $this->assertEquals('j', array_values($obj->get('e.*.i', fn($v) => $v->value() === 'j'))[0]->value());
+    }
+
 }

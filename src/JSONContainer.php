@@ -4,6 +4,7 @@ namespace Eboubaker\JSON;
 
 use ArrayAccess;
 use ArrayIterator;
+use Closure;
 use Countable;
 use Eboubaker\JSON\Contracts\JSONEntry;
 use Generator;
@@ -147,6 +148,101 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     public function serialize(): string
     {
         return strval($this);
+    }
+
+    /**
+     * find entries that match the given path.
+     * the path is a dot notation path which accepts wildcards of "<b><code>*</code></b>" and "<b><code>**</code></b>". path segments are separated by a dot "<b>.</b>"<br>
+     * if the path ends with a "<b><code>**</code></b>" wildcard, the result will be all nested {@link JSONValue}s of the preceding path segments.<br>
+     * if the path ends with a "<b><code>*</code></b>" wildcard, the result will be all entries of the preceding path segments.
+     * @param string $path the path to search for
+     * @param Closure|null $matcher optional matcher function to filter the results, it will be called with the found {@link JSONValue} as the first parameter and should return a boolean value to indicate if the entry should be included in the result or not
+     * @return array<string,JSONEntry>|false returns array of found entries or false if arguments are invalid
+     */
+    public function get(string $path, Closure $matcher = null)
+    {
+        if (!$this->validatePathString($path)) return false;
+        return $this->internal_get_path(explode('.', $path), $matcher);
+    }
+
+    private function validatePathString(?string $path): bool
+    {
+        if (strpos($path, '..') !== false || !$path) return false;
+        $segments = explode('.', $path);
+        foreach ($segments as $segment) {
+            if (!is_string($segment)) {
+                return false;
+            }
+        }
+        if (empty($segments)) return false;
+        return true;
+    }
+
+    /**
+     * gets results of a single path
+     */
+    private function internal_get_path(array $segments, ?Closure $matcher): array
+    {
+        $result = [];
+        $segment = $segments[0];
+        array_shift($segments);// next segments will passed to children if needed
+        $is_last_segment = empty($segments);
+        if ($segment === '**') {
+            if ($is_last_segment) {
+                foreach ($this->values() as $key => $value) {
+                    if ($matcher != null && !$matcher($value)) continue;
+                    $result[$key] = $value;
+                }
+            } else {
+                foreach ($this->entries as $entryKey => $entry) {
+                    if ($entry instanceof JSONContainer) {
+                        foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
+                            $result[$entryKey . '.' . $key] = $resultEntry;
+                        }
+                    }
+                }
+                foreach ($this->entries as $entryKey => $entry) {
+                    if ($entry instanceof JSONContainer) {
+                        foreach ($entry->internal_get_path(['**', ...$segments], $matcher) as $key => $resultEntry) {
+                            $result[$entryKey . '.' . $key] = $resultEntry;
+                        }
+                    }
+                }
+            }
+        } else if ($segment === '*') {
+            if ($is_last_segment) {
+                foreach ($this->entries as $key => $value) {
+                    if ($matcher != null && !$matcher($value)) continue;
+                    $result[$key] = $value;
+                }
+            } else {
+                foreach ($this->entries as $entryKey => $entry) {
+                    if ($entry instanceof JSONContainer) {
+                        foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
+                            $result[$entryKey . '.' . $key] = $resultEntry;
+                        }
+                    }
+                }
+            }
+        } else {
+            foreach ($this->entries as $entryKey => $entry) {
+                if ($segment === $entryKey) {
+                    if ($is_last_segment) {
+                        if ($matcher != null && !$matcher($entry)) {
+                            return $result;
+                        }
+                        $result[$entryKey] = $entry;
+                    } else {
+                        if ($entry instanceof JSONContainer) {
+                            foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
+                                $result[$entryKey . '.' . $key] = $resultEntry;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $result;
     }
 
     /**
