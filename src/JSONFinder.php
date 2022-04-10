@@ -205,7 +205,7 @@ class JSONFinder
                 else if($code === 'n') { $chars .= "\n";$i++; }
                 else if($code === 'r') { $chars .= "\r";$i++; }
                 else if($code === 't') { $chars .= "\t";$i++; }
-                else if($code === 'b') { $chars .= "\b";$i++; }
+                else if($code === 'b') { $chars .= chr(8);$i++; }
                 else if($code === 'f') { $chars .= "\f";$i++; }
                 //@formatter:on
                 else {
