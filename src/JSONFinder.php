@@ -291,21 +291,37 @@ class JSONFinder
         $foundESign = $foundNumberSign = $foundDot = $foundE = false;
         $number = '';
         $i = $from;
+        $numberLength = 0;
         while ($i < $len) {
             $char = $raw[$i];
             if ($char === '.') {
+                if ($numberLength === 0) {
+                    // json standard does not allow a number to start with a dot
+                    return null;
+                }
                 if ($foundDot) {
+                    // invalid: two dots in a number
                     return null;
                 }
                 $foundDot = true;
                 $number .= $char;
+                $numberLength++;
             } else if ($char === 'e' || $char === 'E') {
+                if ($numberLength === 0) {
+                    // e cannot be the first character
+                    return null;
+                }
+                if ($number[$numberLength - 1] === '.') {
+                    // e cannot be directly after a dot
+                    return null;
+                }
                 if ($foundE) {
                     // invalid number (two e's found)
                     return null;
                 }
                 $foundE = true;
                 $number .= $char;
+                $numberLength++;
             } else if ($char === '+' || $char === '-') {
                 if ($foundE) {
                     if ($foundESign) {
@@ -315,6 +331,10 @@ class JSONFinder
                         $foundESign = true;
                     }
                 } else {
+                    if ($numberLength !== 0) {
+                        // sign can only be the first character
+                        return null;
+                    }
                     if ($foundNumberSign) {
                         // invalid number (two signs found)
                         return null;
@@ -322,8 +342,10 @@ class JSONFinder
                     $foundNumberSign = true;
                 }
                 $number .= $char;
+                $numberLength++;
             } else if (is_numeric($char)) {
                 $number .= $char;
+                $numberLength++;
             } else {// end of number
                 break;
             }
