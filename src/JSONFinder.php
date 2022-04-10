@@ -288,10 +288,7 @@ class JSONFinder
         if ($raw[$from] !== "+" && $raw[$from] !== "-" && !is_numeric($raw[$from])) {
             return null;
         }
-        $eSign = '';
-        $intSign = '';
-        $foundDot = false;
-        $foundE = false;
+        $foundESign = $foundNumberSign = $foundDot = $foundE = false;
         $number = '';
         $i = $from;
         while ($i < $len) {
@@ -303,28 +300,28 @@ class JSONFinder
                 $foundDot = true;
                 $number .= $char;
             } else if ($char === 'e' || $char === 'E') {
-                $number .= $char;
                 if ($foundE) {
                     // invalid number (two e's found)
                     return null;
                 }
                 $foundE = true;
-            } else if ($char === '+' || $char === '-') {
                 $number .= $char;
+            } else if ($char === '+' || $char === '-') {
                 if ($foundE) {
-                    if ($eSign !== '') {
+                    if ($foundESign) {
                         // invalid number (two e's signs found)
                         return null;
                     } else {
-                        $eSign = $char;
+                        $foundESign = true;
                     }
                 } else {
-                    if ($intSign !== '') {
+                    if ($foundNumberSign) {
                         // invalid number (two signs found)
                         return null;
                     }
-                    $intSign = $char;
+                    $foundNumberSign = true;
                 }
+                $number .= $char;
             } else if (is_numeric($char)) {
                 $number .= $char;
             } else {// end of number
