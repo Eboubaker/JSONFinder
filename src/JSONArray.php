@@ -99,7 +99,7 @@ class JSONArray extends JSONContainer
     public function unserialize($data): JSONArray
     {
         if (self::$valueFinder === null) {
-            self::$valueFinder = new JSONFinder(JSONFinder::T_ARRAY | JSONFinder::T_EMPTY_OBJECT);
+            self::$valueFinder = new JSONFinder(JSONFinder::T_ARRAY | JSONFinder::T_EMPTY_ARRAY);
         }
         return self::$valueFinder->findJsonEntries($data)[0];
     }
