@@ -40,7 +40,7 @@ foreach($foundEntries as $key => $value) {
     // ....
 }
 
-// loop through every deeply nested primitive value (string, number, boolean, null)
+// loop through every deeply nested value(not object or array)
 foreach($foundEntries->values() as $key => $value) {
     // ....
 }

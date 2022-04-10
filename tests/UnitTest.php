@@ -121,9 +121,10 @@ final class UnitTest extends TestCase
         $found = (new JSONFinder())->findJsonEntries($this->rawHTMLResponse);
         $str = '';
         foreach ($found->values() as $key => $item) {
+            $item = $item->value();
             $str .= ":$key::$item:";
         }
-        $this->assertEquals('3eabae12402f4d558476c0f29a57abb2', md5($str));
+        $this->assertEquals('f23f35c0a64b7e0a476419e6b45e2cb8', md5($str));
         foreach ($found as $key => $item) {
             $this->assertEquals($item, $found[$key]);
         }
