@@ -63,6 +63,9 @@ class JSONFinder
      */
     private int $allowedTypes;
 
+    /** is T_JS flag on? */
+    private bool $shouldAcceptJSKeys;
+
     /**
      * @param int $allowed_types allowed types that the parser should add to the resulting array of found tokens, does not affect the tokens that are nested in the array
      * @throws InvalidArgumentException if the array of allowed types contains an invalid type
@@ -73,6 +76,7 @@ class JSONFinder
             throw new InvalidArgumentException("invalid type: $allowed_types");
         }
         $this->allowedTypes = $allowed_types;
+        $this->shouldAcceptJSKeys = $allowed_types & JSONFinder::T_JS;
     }
 
     /**
@@ -440,7 +444,7 @@ class JSONFinder
                         // valid json key
                         $keyToken = $jsonKey;
                     }
-                } else if ($this->allowedTypes & JSONFinder::T_JS) {
+                } else if ($this->shouldAcceptJSKeys) {
                     $jsKey = $this->parseJSObjectKey($raw, $len, $i);
                     if ($jsKey !== null) {
                         // valid js key
