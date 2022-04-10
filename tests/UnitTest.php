@@ -7,6 +7,7 @@ require_once "vendor/autoload.php";
 use Eboubaker\JSON\Contracts\JSONStringable;
 use Eboubaker\JSON\JSONFinder;
 use Eboubaker\JSON\JSONObject;
+use Eboubaker\JSON\JSONValue;
 use PHPUnit\Framework\TestCase;
 
 
@@ -218,6 +219,43 @@ final class UnitTest extends TestCase
             "z" => "600"
         ];
         $this->assertEquals('{"key":["iam","custom"],"z":"600"}', strval(new JSONObject($obj)));
+    }
+
+    /**
+     * @coversNothing
+     * @testdox can do equality on JSONValues
+     */
+    public function testCanDoEqualityOnJSONValues(): void
+    {
+        $v = new JSONValue(5);
+        $this->assertTrue($v->equals(new JSONValue(5)));
+        $this->assertTrue($v->equals(5));
+
+        $v = new JSONValue(true);
+        $this->assertTrue($v->equals(1));
+        $this->assertTrue($v->equals(2));
+        $this->assertTrue($v->equals(-2));
+        $this->assertFalse($v->equals(1, true));
+
+        $o1 = new class implements JSONStringable {
+            public function toJSONString(): string
+            {
+                return '';
+            }
+        };
+        $o2 = new class implements JSONStringable {
+            public function toJSONString(): string
+            {
+                return '';
+            }
+        };
+        $v = new JSONValue($o1);
+        $this->assertTrue($v->equals(new JSONValue($o1)));
+        $this->assertTrue($v->equals($o1));
+        $this->assertTrue($v->equals($o1, true));
+        $this->assertFalse($v->equals($o2));
+        $this->assertFalse($v->equals(new JSONValue($o2)));
+        $this->assertFalse($v->equals($o2, true));
     }
 
     /**

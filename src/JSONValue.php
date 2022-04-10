@@ -100,4 +100,22 @@ class JSONValue implements JSONEntry
         }
         return self::$valueFinder->findJsonEntries($data)[0];
     }
+
+    /**
+     * check if this JSONValue's value is equal to the given value
+     * @param $value JSONValue|string|int|float|bool|null
+     * @param $strict bool if true, the value must be strictly equal to the given value
+     * @return bool true if the value is equal to the given value
+     */
+    public function equals($value, bool $strict = false): bool
+    {
+        if ($value instanceof JSONValue) {
+            $value = $value->value;
+        }
+        if ($strict) {
+            return $this->value === $value;
+        } else {
+            return $this->value == $value;
+        }
+    }
 }
