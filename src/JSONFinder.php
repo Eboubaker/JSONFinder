@@ -436,13 +436,13 @@ class JSONFinder
                 if ($raw[$i] === '"') {
                     // start of json key
                     $jsonKey = $this->parseString($raw, $len, $i);
-                    if ($jsonKey !== null && $jsonKey->entry instanceof JSONValue && is_string($jsonKey->entry->value)) {
+                    if ($jsonKey != null) {
                         // valid json key
                         $keyToken = $jsonKey;
                     }
                 } else if ($this->allowedTypes & JSONFinder::T_JS) {
                     $jsKey = $this->parseJSObjectKey($raw, $len, $i);
-                    if ($jsKey !== null && $jsKey->entry instanceof JSONValue && is_string($jsKey->entry->value)) {
+                    if ($jsKey !== null) {
                         // valid js key
                         $keyToken = $jsKey;
                     }
