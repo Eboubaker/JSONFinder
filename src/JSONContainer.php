@@ -74,25 +74,16 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         return count($this->entries);
     }
 
-    /**
-     * @internal this method is not part of the public API
-     */
     public function offsetExists($offset): bool
     {
         return isset($this->entries[$offset]);
     }
 
-    /**
-     * @internal this method is not part of the public API
-     */
     public function offsetGet($offset)
     {
         return $this->entries[$offset];
     }
 
-    /**
-     * @internal this method is not part of the public API
-     */
     public function offsetSet($offset, $value)
     {
         if (!($value instanceof JSONEntry)) {
@@ -103,17 +94,11 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         $this->entries[$offset] = $value;
     }
 
-    /**
-     * @internal this method is not part of the public API
-     */
     public function offsetUnset($offset)
     {
         unset($this->entries[$offset]);
     }
 
-    /**
-     * @internal this method is not part of the public API
-     */
     public function getIterator(): ArrayIterator
     {
         return new RecursiveArrayIterator($this->entries);
