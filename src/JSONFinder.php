@@ -303,9 +303,11 @@ class JSONFinder
                     // invalid: two dots in a number
                     return null;
                 }
+                if ($foundE) {
+                    // dot cannot be after an 'E'
+                    return null;
+                }
                 $foundDot = true;
-                $number .= $char;
-                $numberLength++;
             } else if ($char === 'e' || $char === 'E') {
                 if ($numberLength === 0) {
                     // e cannot be the first character
@@ -320,8 +322,6 @@ class JSONFinder
                     return null;
                 }
                 $foundE = true;
-                $number .= $char;
-                $numberLength++;
             } else if ($char === '+' || $char === '-') {
                 if ($foundE) {
                     if ($foundESign) {
@@ -341,20 +341,20 @@ class JSONFinder
                     }
                     $foundNumberSign = true;
                 }
-                $number .= $char;
-                $numberLength++;
-            } else if (is_numeric($char)) {
-                $number .= $char;
-                $numberLength++;
-            } else {// end of number
+            } else if (!is_numeric($char)) {
+                // end of number
                 break;
             }
+            $number .= $char;
+            $numberLength++;
             $i++;
         }
-        if ($number === '') {// should not happen, but just in case something went wrong above, or if for some reason $i was at the end of the string
+        if ($numberLength === 0) {
+            // should not happen, but just in case something went wrong above,
+            // or if for some reason $i was at the end of the string
             return null;
         }
-        $lastChar = $number[strlen($number) - 1];
+        $lastChar = $number[$numberLength - 1];
         if ($lastChar === 'e' || $lastChar === 'E' || $lastChar === '.' || $lastChar === '+' || $lastChar === '-') {
             // unexpected end of number
             return null;
