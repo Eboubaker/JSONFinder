@@ -85,7 +85,7 @@ class JSONFinder
 
     /**
      * @param int $allowed_types allowed types that the parser should add to the resulting array of found tokens, does not affect the tokens that are nested in the array
-     * @throws InvalidArgumentException if the array of allowed types contains an invalid type
+     * @throws InvalidArgumentException if $allowed_types contains an invalid type
      */
     public function __construct(int $allowed_types = JSONFinder::T_ARRAY | JSONFinder::T_OBJECT)
     {
