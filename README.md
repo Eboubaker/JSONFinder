@@ -16,7 +16,6 @@ composer require eboubaker/json-finder
 suppose you want to extract all json from an http response (from &lt;script&gt; tags).
 ```php
 use Eboubaker\JSON\JSONFinder;
-use Eboubaker\JSON\JSONObject;
 
 $html = file_get_contents('http://www.youtube.com');
 $finder = new JSONFinder();
@@ -41,14 +40,21 @@ foreach($foundEntries as $key => $value) {
 }
 
 // loop through every deeply nested value(not object or array)
-foreach($foundEntries->values() as $key => $value) {
+foreach($foundEntries->values() as $keyPath => $value) {
     // ....
 }
 
 // pretty print the json entry with indentation of 2 spaces
 echo $foundEntries->toReadableString(2);
+```
 
-// convert php values into json string without ext-json
+### value encoding
+
+you can encode php values into json string without ext-json.
+
+```php
+use Eboubaker\JSON\JSONObject;
+
 $phpvalue = [
             "a" => "b",
             "e" => [
@@ -62,4 +68,45 @@ $phpvalue = [
 $obj = new JSONObject($phpvalue);
 echo strval($obj);// '{"a":"b","e":{"f":null,"h":{"i":"j","k":[1,2,3.0E-13,{"x":0.3}]}}}'
 ```
-All other functions are self documented.
+
+### json query
+
+you can search for values inside the json entries. with dot notation and wildcard "`*`" "`**`" search.
+
+```php
+$obj = new JSONObject([
+    "meta" => [
+        "id" => "12345",
+        "title" => "My Title",
+    ],
+    "video" => [
+        "id" => "12345",
+        "formats" => [
+            [
+                "name": "mp4",
+                "url": "https://example.com/video720.mp4",
+                "resolution": "1280x720",
+            ],
+            [
+                "name": "mp4",
+                "url": "https://example.com/video1080.mp4",
+                "resolution": "1920x1080",
+            ],
+            [
+                "name": "webm",
+                "url": "https://example.com/video720.webm",
+                "resolution": "1280x720",
+            ],
+        ]
+    ]
+]);
+
+$result = $obj->get('meta.id'); // ['meta.id' => JSONValue("12345")]
+$vide_id = array_values($result)[0];
+
+// you can apply a filter to the results    
+$mp4_videos = $obj->get('video.formats.*', fn($v) => $v->get('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
+
+```
+
+All other functions are self documented with PHPDoc.
