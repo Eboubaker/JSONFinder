@@ -226,12 +226,13 @@ class JSONFinder
                     $chars .= html_entity_decode("&#x$hex;", ENT_COMPAT, 'UTF-8');
                     $i += 5;
                 } //@formatter:off
-                else if($code === $quote) { $chars .= $quote ;$i++; }
                 else if($code === '\\'){ $chars .= "\\";$i++; }
                 else if($code === '/') { $chars .= "/" ;$i++; }
                 else if($code === 'n') { $chars .= "\n";$i++; }
                 else if($code === 'r') { $chars .= "\r";$i++; }
                 else if($code === 't') { $chars .= "\t";$i++; }
+                else if($code === '"') { $chars .= '"' ;$i++; }
+                else if($code === "'") { $chars .= "'" ;$i++; }
                 else if($code === 'b') { $chars .= chr(8);$i++; }
                 else if($code === 'f') { $chars .= "\f";$i++; }
                 //@formatter:on
