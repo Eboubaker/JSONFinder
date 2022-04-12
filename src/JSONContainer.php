@@ -152,7 +152,11 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
 
     private function validatePathString(?string $path): bool
     {
-        if (strpos($path, '..') !== false || !$path) return false;
+        if (!$path
+            || strpos($path, '..') !== false
+            || strpos($path, '**.*') !== false) {
+            return false;
+        }
         $segments = explode('.', $path);
         foreach ($segments as $segment) {
             if (!is_string($segment)) {
