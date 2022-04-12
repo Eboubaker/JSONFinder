@@ -115,4 +115,16 @@ $mp4_formats = $obj->get('video.formats.*', fn($v) => $v->get('name')->equals('m
 
 ```
 
+### Controlling results of JSONFinder
+
+you can add flags to the JSONFinder constructor to set the allowed types of values that the JSONFinder will return.  
+for example if you want to also include javascript object in the resutls you can add the T_JS flag. this will also match
+javascript object-keys or javascript strings that are quoted with single quote `'`
+
+```php
+$finder = new JSONFinder(JSONFinder::T_ALL_JSON | JSONFinder::T_JS);
+$finder->findJsonEntries("{mykey: 1}");// [JSONObject({"mykey":1})]
+$finder->findJsonEntries("{'stringkey': 'stringvalue'}");// [JSONObject({"stringkey":"stringvalue"})]
+```
+
 All other functions are self documented with PHPDoc.
