@@ -48,7 +48,7 @@ foreach($foundEntries->values() as $keyPath => $value) {
 echo $foundEntries->toReadableString(2);
 ```
 
-### value encoding
+### Value Encoding
 
 you can encode php values into json string without ext-json.
 
@@ -69,7 +69,7 @@ $obj = new JSONObject($phpvalue);
 echo strval($obj);// '{"a":"b","e":{"f":null,"h":{"i":"j","k":[1,2,3.0E-13,{"x":0.3}]}}}'
 ```
 
-### json query
+### JSON Query
 
 you can search for values inside the json entries. with dot notation and wildcard "`*`" "`**`" search.
 
@@ -104,8 +104,14 @@ $obj = new JSONObject([
 $result = $obj->get('meta.id'); // ['meta.id' => JSONValue("12345")]
 $vide_id = array_values($result)[0];
 
-// you can apply a filter to the results    
-$mp4_videos = $obj->get('video.formats.*', fn($v) => $v->get('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
+// get all deep entries that contains a 'name' key
+$has_id = $obj->get('**.id');
+
+// get all formats in 'video.formats' path
+$all_formats = $obj->get('video.formats.*');
+
+// you can apply a filter to the results
+$mp4_formats = $obj->get('video.formats.*', fn($v) => $v->get('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
 
 ```
 
