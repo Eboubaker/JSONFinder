@@ -102,7 +102,9 @@ class JSONValue implements JSONEntry
     }
 
     /**
-     * check if this JSONValue's value is equal to the given value
+     * check if this JSONValue's value is equal to the given value.
+     * if <code>$value<code> is {@link JSONValue} then it's values will be compared
+     *
      * @param $value JSONValue|string|int|float|bool|null
      * @param $strict bool if true, the value must be strictly equal to the given value
      * @return bool true if the value is equal to the given value
