@@ -11,7 +11,7 @@
       "email": "eboubakkar@gmail.com"
     }
   ],
-  "license": "CC-BY-3.0",
+  "license": "MIT",
   "autoload": {
     "psr-4": {
       "Eboubaker\\JSON\\": "src/"
