@@ -25,7 +25,9 @@ class JSONFinder
     public const T_OBJECT = 0x8;
     /**
      * this is a flag that extends other flags, if set to true the finder will also match javascript objects.<br>
-     * a javascript object is were value keys are not wrapped in quotes '"' (.i.e. {age:20}).
+     * a javascript object is were value keys are not wrapped in quotes '"' (.i.e. {age:20}). <br>
+     * or if it is wrapped in single quotes (.i.e. {'age':20})<br>
+     * the parser will also allow string values that are wrapped in single quotes as valid strings
      */
     public const T_JS = 0x10;
     /**
@@ -64,7 +66,22 @@ class JSONFinder
     private int $allowedTypes;
 
     /** is T_JS flag on? */
-    private bool $shouldAcceptJSKeys;
+    private bool $shouldParseJS;
+
+    private const SINGLE_QUOTE = "'";
+    private const DOUBLE_QUOTE = '"';
+
+    /** normal javascript reserved keywords */
+    private const JS_KEYWORDS = array(
+        // KEYWORDS
+        'break', 'case', 'catch', 'class', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'enum', 'export', 'extends', 'import', 'super',
+        // BOOLEAN
+        'true', 'false',
+        // NULL
+        'null'
+    );
+    /** strict mode keywords */
+    private const JS_STRICT_KEYWORDS = array('implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield');
 
     /**
      * @param int $allowed_types allowed types that the parser should add to the resulting array of found tokens, does not affect the tokens that are nested in the array
@@ -76,7 +93,7 @@ class JSONFinder
             throw new InvalidArgumentException("invalid type: $allowed_types");
         }
         $this->allowedTypes = $allowed_types;
-        $this->shouldAcceptJSKeys = $allowed_types & JSONFinder::T_JS;
+        $this->shouldParseJS = $allowed_types & JSONFinder::T_JS;
     }
 
     /**
@@ -139,18 +156,20 @@ class JSONFinder
      * @param string $raw
      * @param int $len
      * @param int $from
-     * @return JSONValue|JSONArray|JSONObject
+     * @return null|JTokenStruct<JSONValue|JSONArray|JSONObject>
      */
     private function parse(string $raw, int $len, int $from): ?JTokenStruct
     {
+        if ($this->shouldParseJS && $str = $this->parseString($raw, $len, $from, self::SINGLE_QUOTE)) {
+            return $str;
+        }
         //@formatter:off
-        return $this->parseString($raw, $len, $from)
+        return $this->parseString($raw, $len, $from, self::DOUBLE_QUOTE)
             ?: $this->parseObject($raw, $len, $from)
             ?: $this->parseArray($raw, $len, $from)
             ?: $this->parseNumber($raw, $len, $from)
             ?: $this->parseBoolean($raw, $from)
-            ?: $this->parseNull($raw, $from)
-            ?: null;
+            ?: $this->parseNull($raw, $from);
         //@formatter:on
     }
 
@@ -158,6 +177,10 @@ class JSONFinder
     {
         if (substr($raw, $from, 4) === 'null') {
             return new JTokenStruct(new JSONValue(null), 4);
+        } else if ($this->shouldParseJS && substr($raw, $from, 9) === 'undefined') {
+            // TODO: should we really check for undefined on T_JS flag?
+            // because converting undefined to 'null' is kinda invalid
+            return new JTokenStruct(new JSONValue(null), 9);
         } else {
             return null;
         }
@@ -174,21 +197,17 @@ class JSONFinder
     }
 
     /**
-     * read through the string characters until an unclosing '"' is found, return string that is between the first non escaped '"' and the last non escaped '"'
-     * @param string $raw
-     * @param int $len
-     * @param int $from
-     * @return JTokenStruct|null
+     * read through the string characters until an unclosing quote is found, return string that is between the first non escaped quote and the last non escaped quote
      */
-    private function parseString(string $raw, int $len, int $from): ?JTokenStruct
+    private function parseString(string $raw, int $len, int $from, string $quote): ?JTokenStruct
     {
-        if ($raw[$from] !== '"') {
+        if ($raw[$from] !== $quote) {
             return null;
         }
         $i = 1 + $from;
         $chars = '';
         while ($i < $len) {
-            if ($raw[$i] === '"') {
+            if ($raw[$i] === $quote) {
                 return new JTokenStruct(new JSONValue($chars), ($i - $from) + 1);
             } else if ($raw[$i] === '\\' && $i + 1 < $len) {
                 // parse codepoint chars(\u...., \t, \n, \r, \f, \b, \/, \\, \")
@@ -200,10 +219,14 @@ class JSONFinder
                         // invalid hex char-code
                         return null;
                     }
+                    // should we use mb_string here?,
+                    // do a function_exists(mb_convert_encoding) check
+                    // and use it if it is available to increase performance
+                    // i don't like this html_entity_decode() call
                     $chars .= html_entity_decode("&#x$hex;", ENT_COMPAT, 'UTF-8');
                     $i += 5;
                 } //@formatter:off
-                else if($code === '"') { $chars .= '"' ;$i++; }
+                else if($code === $quote) { $chars .= $quote ;$i++; }
                 else if($code === '\\'){ $chars .= "\\";$i++; }
                 else if($code === '/') { $chars .= "/" ;$i++; }
                 else if($code === 'n') { $chars .= "\n";$i++; }
@@ -241,22 +264,16 @@ class JSONFinder
                 $chars .= $raw[$i];
                 $i++;
             } else {
-                // check for a sneaky case where there is a space in the key name
-                // for example this key pair: 'abd c: "value"'
-                $j = $i;
-                while ($j < $len && $raw[$j] === ' ') {
-                    $j++;
-                }
-                if ($j < $len && $raw[$j] !== ':') {
-                    return null;
-                }
-                // found a valid key name
+                // we reached the ':' character, or we reached an invalid character
                 break;
             }
         }
-        if ($chars !== '' && !$this->isJavaScriptKeyword($chars, true)) {
+        // TODO: add strict mode as a flag?
+        /** @noinspection PhpRedundantOptionalArgumentInspection */
+        if ($chars !== '' && !$this->isJavaScriptKeyword($chars, false)) {
             return new JTokenStruct(new JSONValue($chars), $i - $from);
         } else {
+            // it was empty, or a javascript keyword.
             return null;
         }
     }
@@ -267,17 +284,11 @@ class JSONFinder
      */
     private function isJavaScriptKeyword(string $str, bool $strict = false): bool
     {
-        if (in_array($str, array(
-            // KEYWORDS
-            'break', 'case', 'catch', 'class', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'enum', 'export', 'extends', 'import', 'super',
-            // BOOLEAN
-            'true', 'false',
-            // NULL
-            'null'))) {
+        if (in_array($str, self::JS_KEYWORDS, true)) {
             return true;
         }
         // strict mode reserved keywords
-        return $strict && in_array($str, array('implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield'));
+        return $strict && in_array($str, self::JS_STRICT_KEYWORDS, true);
     }
 
     /**
@@ -456,22 +467,30 @@ class JSONFinder
                     return null;
                 }
                 $keyToken = null;
-                if ($raw[$i] === '"') {
-                    // start of json key
-                    $jsonKey = $this->parseString($raw, $len, $i);
+                if ($raw[$i] === self::DOUBLE_QUOTE) {
+                    // start of json key?
+                    $jsonKey = $this->parseString($raw, $len, $i, self::DOUBLE_QUOTE);
                     if ($jsonKey != null) {
                         // valid json key
                         $keyToken = $jsonKey;
                     }
-                } else if ($this->shouldAcceptJSKeys) {
+                } else if ($this->shouldParseJS && $raw[$i] === self::SINGLE_QUOTE) {
+                    // start of single quoted javascript object key?
+                    $jsKey = $this->parseString($raw, $len, $i, self::SINGLE_QUOTE);
+                    if ($jsKey != null) {
+                        // valid javascript object key
+                        $keyToken = $jsKey;
+                    }
+                } else if ($this->shouldParseJS) {
+                    // valid json non quoted object key?
                     $jsKey = $this->parseJSObjectKey($raw, $len, $i);
                     if ($jsKey !== null) {
-                        // valid js key
+                        // valid javascript object key
                         $keyToken = $jsKey;
                     }
                 }
                 if ($keyToken === null) {
-                    // invalid key
+                    // key not found, hence this hole object is invalid.
                     return null;
                 }
                 $i = $this->skipWhitespaces($raw, $i + $keyToken->length, $len);

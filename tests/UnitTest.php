@@ -71,7 +71,7 @@ final class UnitTest extends TestCase
     public function testCanCountEntries(): void
     {
         $count = (new JSONFinder(JSONFinder::T_ALL_JSON))->findJsonEntries($this->rawHTMLResponse)->count();
-        $this->assertEquals(418, $count);
+        $this->assertEquals(420, $count);
     }
 
     /**
@@ -80,7 +80,7 @@ final class UnitTest extends TestCase
     public function testCanCountEntriesWithJS(): void
     {
         $count = (new JSONFinder(JSONFinder::T_ALL_JSON | JSONFinder::T_JS))->findJsonEntries($this->rawHTMLResponse)->count();
-        $this->assertEquals(224, $count);
+        $this->assertEquals(225, $count);
     }
 
 
@@ -111,7 +111,7 @@ final class UnitTest extends TestCase
     public function testCanCountAllContainedEntriesWithJS(): void
     {
         $parsed = (new JSONFinder(JSONFinder::T_ARRAY | JSONFinder::T_OBJECT | JSONFinder::T_JS))->findJsonEntries($this->rawHTMLResponse);
-        $this->assertEquals(1857, $parsed->countAll());
+        $this->assertEquals(1858, $parsed->countAll());
     }
 
     /**
@@ -138,7 +138,7 @@ final class UnitTest extends TestCase
     {
         $count = fn($types) => (new JSONFinder($types))->findJsonEntries($this->rawHTMLResponse)->count();
         //@formatter:off
-        $null=7;$bool=22;$num=77;$str=217;$obj=6;$arr=61;$e_obj=16;$e_arr=12;
+        $null=7;$bool=22;$num=79;$str=217;$obj=6;$arr=61;$e_obj=16;$e_arr=12;
         //@formatter:on
         $a_obj = $e_obj + $obj;
         $a_arr = $e_arr + $arr;
@@ -164,7 +164,7 @@ final class UnitTest extends TestCase
     {
         $count = fn($types) => (new JSONFinder($types))->findJsonEntries($this->rawHTMLResponse)->count();
         //@formatter:off
-        $null=1;$bool=2;$num=19;$str=158;$obj=8;$arr=19;$e_obj=16;$e_arr=1;
+        $null=1;$bool=2;$num=19;$str=158;$obj=9;$arr=19;$e_obj=16;$e_arr=1;
         //@formatter:on
         $a_obj = $e_obj + $obj;
         $a_arr = $e_arr + $arr;
