@@ -178,11 +178,13 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         $is_last_segment = empty($segments);
         if ($segment === '**') {
             if ($is_last_segment) {
+                // add all nested values
                 foreach ($this->values() as $key => $value) {
-                    if ($matcher != null && !$matcher($value)) continue;
+                    if ($matcher != null && !$matcher($value)) continue;// matcher did not accept it, skip it.
                     $result[$key] = $value;
                 }
             } else {
+                // add all values found by containers that contains the next segments
                 foreach ($this->entries as $entryKey => $entry) {
                     if ($entry instanceof JSONContainer) {
                         foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
@@ -190,6 +192,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                         }
                     }
                 }
+                // add all values found by other deep containers that contains the next segments
                 foreach ($this->entries as $entryKey => $entry) {
                     if ($entry instanceof JSONContainer) {
                         foreach ($entry->internal_get_path(['**', ...$segments], $matcher) as $key => $resultEntry) {
@@ -200,11 +203,13 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
             }
         } else if ($segment === '*') {
             if ($is_last_segment) {
+                // last segment, add all entries
                 foreach ($this->entries as $key => $value) {
-                    if ($matcher != null && !$matcher($value)) continue;
+                    if ($matcher != null && !$matcher($value)) continue;// matcher did not accept it, skip it
                     $result[$key] = $value;
                 }
             } else {
+                // not last segment, add all values found by containers that contains the next segments
                 foreach ($this->entries as $entryKey => $entry) {
                     if ($entry instanceof JSONContainer) {
                         foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
@@ -214,14 +219,18 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                 }
             }
         } else {
+            // check if the current segment exists in this container as an entry
             foreach ($this->entries as $entryKey => $entry) {
                 if ($segment === $entryKey) {
+                    // entry was found, check if it is the last segment or not
                     if ($is_last_segment) {
+                        // last segment, add it if the matcher accepted it.
                         if ($matcher != null && !$matcher($entry)) {
-                            return $result;
+                            break;// was last segment, but matcher rejected it, so break the loop
                         }
                         $result[$entryKey] = $entry;
                     } else {
+                        // not the last segment, pass the next segments to the entry and add the results
                         if ($entry instanceof JSONContainer) {
                             foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
                                 $result[$entryKey . '.' . $key] = $resultEntry;
