@@ -28,7 +28,7 @@ class JSONArray extends JSONContainer
             if (!$entry instanceof JSONEntry) {
                 /** @noinspection DuplicatedCode */
                 if ($entry instanceof JSONStringable) {
-                    $this->entries[$key] = new JSONValue($entry);
+                    $this->entries[] = new JSONValue($entry);
                 } else if (is_array($entry)) {
                     if (Utils::is_associative($entry)) {
                         $this->entries[] = new JSONObject($entry);
@@ -41,7 +41,7 @@ class JSONArray extends JSONContainer
                     $this->entries[] = new JSONValue($entry);
                 }
             } else {
-                $this->entries[$key] = $entry;
+                $this->entries[] = $entry;
             }
         }
     }
