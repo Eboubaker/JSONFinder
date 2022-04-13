@@ -309,4 +309,15 @@ final class UnitTest extends TestCase
         $this->assertEquals('j', array_values($obj->get('e.*.i', fn($v) => $v->value() === 'j'))[0]->value());
     }
 
+    /**
+     * @coversNothing
+     */
+    public function testCanMatchValues(): void
+    {
+        $val = new JSONValue("a very small text?");
+        $this->assertTrue($val->matches("/text\\?$/"));
+        $this->assertFalse($val->matches("/^text\\?/"));
+        $obj = new JSONObject(["a" => "b"]);
+        $this->assertFalse($obj->matches("/b/"));
+    }
 }

@@ -289,6 +289,12 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
     }
 
+    public function matches(string $regex): bool
+    {
+        // a JSONContainer is not a JSONValue
+        return false;
+    }
+
     /**
      * serialize the json with applied indentation
      * @param int $indent number of spaces to indent

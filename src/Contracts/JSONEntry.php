@@ -28,4 +28,11 @@ interface JSONEntry extends Serializable
      * @return bool returns true if this entry contains other entries inside.
      */
     function isContainer(): bool;
+
+    /**
+     * check if the value of the entry matches a perl regular expression
+     * @param string $regex a valid preg_regex pattern which starts and ends with a delimiter preferably '/'
+     * @return bool returns true if the value() of this entry matches the given regex
+     */
+    function matches(string $regex): bool;
 }

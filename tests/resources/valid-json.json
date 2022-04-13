@@ -36,7 +36,7 @@
     {
       "id": 1,
       "name": "Burt Mcfadden",
-      "about": "\t Burt\nlikes programming",
+      "about": "\t Burt\nlikes\\ programming",
       "range": 1.8e-13
     },
     {

@@ -125,4 +125,9 @@ class JSONValue implements JSONEntry
             return $this->value == $value;
         }
     }
+
+    public function matches(string $regex): bool
+    {
+        return preg_match($regex, strval($this->value)) === 1;
+    }
 }
