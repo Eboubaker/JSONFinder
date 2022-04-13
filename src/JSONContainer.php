@@ -115,12 +115,14 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
 
     public function offsetGet($offset)
     {
+        // if you are not sure if the container has the key use isset($obj[$offset]) before accessing to
+        // avoid Undefined index exception
         return $this->entries[$offset];
     }
 
     public function offsetSet($offset, $value)
     {
-        if (!($value instanceof JSONEntry)) {
+        if ($value instanceof JSONEntry) {
             $this->entries[$offset] = $value;
         } else {
             $this->entries[$offset] = new JSONValue($value);
