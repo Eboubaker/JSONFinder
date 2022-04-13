@@ -115,6 +115,85 @@ $mp4_formats = $obj->get('video.formats.*', fn($v) => $v->get('name')->equals('m
 
 ```
 
+### Find JSON object/array
+
+You can find a json object/array which contains a specific keys and values using `JSONObject::find()`
+or `JSONArray::find()`.  
+the method accept a list of paths with optional value filter.  
+the provided paths must exist on the target and match the provided filters if they exist.
+
+```php
+$object = new JSONObject([
+    "response" => [
+        "hash" => "a5339be0849ced1ffe",
+        "posts" => [
+            [
+                "id" => "1634",
+                "likes" => 700,
+                "text" => "Machine learning for beginners",
+            ],
+            [
+                "id" => "1234",
+                "likes" => 200,
+                "text" => "top 10 best movies of 2019",
+                "comments" => [
+                    [
+                        "id" => "1134",
+                        "likes" => 2,
+                        "replies" : [],
+                        "content" => "thanks for sharing",
+                    ],
+                    [
+                        "id" => "1334",
+                        "content" => "this video is bad",
+                        "likes" => 0,
+                        "replies" => [
+                            [
+                                "id" => "1435",
+                                "likes" => 0,
+                                "content" => "this is not true",
+                            ],
+                            [
+                                "id" => "1475",
+                                "likes" => 0,
+                                "content" => "agree this is the worst",
+                            ]
+                        ],
+                    ]
+                ],
+            ]
+        ]
+    ]
+]);
+
+// get first object which matches these paths and filters.
+$comment_with_likes = $object->find([
+    "content",
+    "likes" => fn(JSONEntry $v) => $v->value() > 0
+]);
+echo $comment_with_likes;// {"id":"1134","likes":2,"replies":[],"content":"thanks for sharing"}
+
+
+$post_with_comment_replies = $object->find([
+    "comments.*.replies"
+]);
+echo $post_with_comment_replies['id'];// "1234"
+
+
+// more than 0 replies
+$comment_with_replies = $object->find([
+    "replies.*"
+]);
+echo $comment_with_replies['id'];// "1334"
+
+
+$comment_with_bad_words = $object->find([
+    "content" => fn(JSONEntry $v) => $v->matches('/worst|bad/')
+]);
+
+echo $comment_with_bad_words['id'];// "1334"
+```
+
 ### Controlling results of JSONFinder
 
 you can add flags to the JSONFinder constructor to set the allowed types of values that the JSONFinder will return.  

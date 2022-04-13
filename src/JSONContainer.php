@@ -289,6 +289,76 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
     }
 
+
+    /**
+     * find a single {@link JSONArray} or {@link JSONObject} which contains all the provided paths.<br>
+     * paths can be in dot notation and accepts wildcards <code>'*'<code> or <code>'**'<code><br>
+     * @param $paths string|array<int,string>|array<string|callable> path or array of paths that must be found in the target.
+     * if the path is represented as a key in the array then it's value must be a callback function and it will be
+     * used to filter the path value. if the callback returns true then the path will be considered as found during search.
+     *
+     * @return JSONContainer|null|false return the first found array or object which contains all the
+     * provided paths or null if not found, returns false if one of the paths is invalid.
+     * @noinspection PhpDocDuplicateTypeInspection
+     */
+    public function find($paths)
+    {
+        $paths = (array)$paths;
+        foreach ($paths as $k => $key) {
+            if (is_integer($k)) {
+                if (!is_string($key)) {
+                    // path must be string
+                    return false;
+                }
+                unset($paths[$k]);
+                $paths[$key] = null;// set matcher to null
+            } else if (!is_callable($key)) {
+                // expected a callback matcher
+                return false;
+            }
+        }
+        foreach ($paths as $path => $__) {
+            if (!$path
+                || strpos($path, '..') !== false
+                || strpos($path, '**.*') !== false) {
+                return false;
+            }
+            $segments = explode('.', $path);
+            if (empty($segments)) return false;
+        }
+        return $this->internal_find($paths);
+    }
+
+    /**
+     * @param array $paths
+     * @return JSONEntry|null
+     */
+    private function internal_find(array $paths): ?JSONContainer
+    {
+        // we must have all the paths in this entry
+        $foundPathsCount = 0;
+        foreach ($paths as $path => $matcher) {
+            if (empty($this->get($path, $matcher))) {
+                // path not found
+                break;
+            } else {
+                $foundPathsCount++;
+            }
+        }
+        if ($foundPathsCount === count($paths)) {
+            // this is the target
+            return $this;
+        }
+        // not all paths were found, check if my children have the target
+        foreach ($this->containersIterator() as $entry) {
+            $found = $entry->internal_find($paths);
+            if ($found !== null) {
+                return $found;
+            }
+        }
+        return null;
+    }
+
     public function matches(string $regex): bool
     {
         // a JSONContainer is not a JSONValue

@@ -4,6 +4,7 @@ namespace Tests;
 
 require_once "vendor/autoload.php";
 
+use Eboubaker\JSON\Contracts\JSONEntry;
 use Eboubaker\JSON\Contracts\JSONStringable;
 use Eboubaker\JSON\JSONFinder;
 use Eboubaker\JSON\JSONObject;
@@ -320,4 +321,129 @@ final class UnitTest extends TestCase
         $obj = new JSONObject(["a" => "b"]);
         $this->assertFalse($obj->matches("/b/"));
     }
+
+
+    /**
+     * @coversNothing
+     */
+    public function testCanFindValues(): void
+    {
+        $obj = new JSONObject([
+            'a' => 'b',
+            'c' => 'd',
+            "e" => [
+                "f" => "g",
+                "h" => [
+                    "i" => "j",
+                    "k" => [1, 2, 3e-13]
+                ],
+                "l" => [
+                    "i" => 1,
+                    "m" => "n",
+                    "extra" => [
+                        "r" => [
+                            "o" => "n"
+                        ]
+                    ],
+                    "o" => [
+                        "extra" => [
+                            "r" => "m"
+                        ],
+                        "p" => [
+                            "extra" => [
+                                "r" => "s"
+                            ],
+                            "M" => [
+                                "q" => [
+                                    "extra" => [
+                                        "r" => "s",
+                                        "t" => [
+                                            "u" => "v",
+                                            "w" => [
+                                                "x" => "y"
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        "r" => [1, 5, 3e-13]
+                    ]
+                ]
+            ]
+        ]);
+        $this->assertEquals('s', $obj->find([
+            'extra.r' => fn(JSONEntry $v) => $v->matches("/s/"),
+            '*.q.**.x' => fn(JSONEntry $v) => $v->matches("/y/")
+        ])['extra']['r']->value());
+
+        $object = new JSONObject([
+            "response" => [
+                "hash" => "a5339be0849ced1ffe",
+                "posts" => [
+                    [
+                        "id" => "1634",
+                        "likes" => 700,
+                        "text" => "Machine learning for beginners",
+                    ],
+                    [
+                        "id" => "1234",
+                        "likes" => 200,
+                        "text" => "top 10 best movies of 2019",
+                        "comments" => [
+                            [
+                                "id" => "1134",
+                                "likes" => 2,
+                                "replies" => [],
+                                "content" => "thanks for sharing",
+                            ],
+                            [
+                                "id" => "1334",
+                                "content" => "this video is bad",
+                                "likes" => 0,
+                                "replies" => [
+                                    [
+                                        "id" => "1435",
+                                        "likes" => 0,
+                                        "content" => "this is not true",
+                                    ],
+                                    [
+                                        "id" => "1475",
+                                        "likes" => 0,
+                                        "content" => "agree this is the worst",
+                                    ]
+                                ],
+                            ]
+                        ],
+                    ]
+                ]
+            ]
+        ]);
+
+        // get first object which matches these paths/filters.
+        $comment_with_likes = $object->find([
+            "content",
+            "likes" => fn(JSONEntry $v) => $v->value() > 0
+        ]);
+        $this->assertEquals('{"id":"1134","likes":2,"replies":[],"content":"thanks for sharing"}', strval($comment_with_likes));
+
+        $post_with_comment_replies = $object->find([
+            "comments.*.replies"
+        ]);
+
+        $this->assertEquals("1234", $post_with_comment_replies['id']->value());
+
+        $comment_with_replies = $object->find([
+            "replies.*"
+        ]);
+
+        $this->assertEquals("1334", $comment_with_replies['id']->value());
+
+        $comment_with_bad_words = $object->find([
+            "content" => fn(JSONEntry $v) => $v->matches('/worst|bad/')
+        ]);
+
+        $this->assertEquals("1334", $comment_with_bad_words['id']->value());
+    }
+
 }
