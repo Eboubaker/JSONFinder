@@ -1,7 +1,7 @@
 {
   "type": "library",
   "name": "eboubaker/json-finder",
-  "description": "Utility that can extract json from text or html documents",
+  "description": "a library that can find json values in a mixed text or html documents, can filter and search the json tree, and converts php objects to json without 'ext-json' extension.",
   "require": {
     "php": ">=7.4"
   },
