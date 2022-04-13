@@ -280,6 +280,34 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     }
 
     /**
+     * returns list of entries that are {@link JSONObject} or {@link JSONArray}
+     * @return JSONContainer[]
+     */
+    public function containers(): array
+    {
+        $results = [];
+        foreach ($this->entries as $key => $entry) {
+            if ($entry instanceof JSONContainer) {
+                $results[$key] = $entry;
+            }
+        }
+        return $results;
+    }
+
+    /**
+     * returns iterator of entries that are {@link JSONObject} or {@link JSONArray}
+     * @return Generator<JSONArray|JSONObject>
+     */
+    public function containersIterator(): Generator
+    {
+        foreach ($this->entries as $key => $entry) {
+            if ($entry instanceof JSONContainer) {
+                yield $key => $entry;
+            }
+        }
+    }
+
+    /**
      * serialize the json with applied indentation
      * @param int $indent number of spaces to indent
      * @return string returns the prettified json
