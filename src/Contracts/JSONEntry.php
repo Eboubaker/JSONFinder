@@ -23,4 +23,9 @@ interface JSONEntry extends Serializable
      * @return string a valid json string which represents the entry
      */
     function __toString(): string;
+
+    /**
+     * @return bool returns true if this entry contains other entries inside.
+     */
+    function isContainer(): bool;
 }

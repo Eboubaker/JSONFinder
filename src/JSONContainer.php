@@ -51,6 +51,11 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
     }
 
+    public function isContainer(): bool
+    {
+        return true;
+    }
+
     /**
      * json container always returns itself
      * @return $this
@@ -203,7 +208,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     {
         $result = [];
         $segment = $segments[0];
-        array_shift($segments);// next segments will passed to children if needed
+        array_shift($segments);// next segments will be passed to children if needed
         $is_last_segment = empty($segments);
         if ($segment === '**') {
             if ($is_last_segment) {

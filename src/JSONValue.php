@@ -33,6 +33,11 @@ class JSONValue implements JSONEntry
         }
     }
 
+    public function isContainer(): bool
+    {
+        return false;
+    }
+
     /**
      * @return bool|float|int|string|null
      */
