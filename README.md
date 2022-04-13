@@ -1,5 +1,5 @@
 # JSONFinder
-JSONFinder is a library that can find json values in a mixed text, and converts values to json without 'ext-json' extension. 
+a library that can find json values in a mixed text or html documents, can filter and search the json tree, and converts php objects to json without 'ext-json' extension.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/eboubaker/json-finder.svg?style=flat-square)](https://packagist.org/packages/eboubaker/json-finder)
 [![PHP Version Require](http://poser.pugx.org/eboubaker/json-finder/require/php)](https://packagist.org/packages/eboubaker/json-finder)
