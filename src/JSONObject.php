@@ -3,7 +3,6 @@
 namespace Eboubaker\JSON;
 
 use Eboubaker\JSON\Contracts\JSONEntry;
-use Eboubaker\JSON\Contracts\JSONStringable;
 use InvalidArgumentException;
 
 /**
@@ -22,24 +21,7 @@ class JSONObject extends JSONContainer
     {
         $this->entries = [];
         foreach ($entries as $key => $entry) {
-            if (!($entry instanceof JSONEntry)) {
-                /** @noinspection DuplicatedCode */
-                if ($entry instanceof JSONStringable) {
-                    $this->entries[$key] = new JSONValue($entry);
-                } else if (is_array($entry)) {
-                    if (Utils::is_associative($entry)) {
-                        $this->entries[$key] = new JSONObject($entry);
-                    } else {
-                        $this->entries[$key] = new JSONArray($entry);
-                    }
-                } else if (is_object($entry)) {
-                    $this->entries[$key] = new JSONObject($entry);
-                } else {
-                    $this->entries[$key] = new JSONValue($entry);
-                }
-            }else{
-                $this->entries[$key] = $entry;
-            }
+            $this->addEntry($entry, $key);
         }
     }
 

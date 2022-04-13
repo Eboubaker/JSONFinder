@@ -45,7 +45,7 @@ class JSONValue implements JSONEntry
     {
         if (is_float($this->value)) {
             $string = strval($this->value);
-            if (!strpos($string, '.') && !strpos($string, 'e') && !strpos($string, 'E')) {
+            if (strpos($string, '.') === false && stripos($string, 'E') === false) {
                 return $string . ".0";// force float
             } else {
                 return $string;

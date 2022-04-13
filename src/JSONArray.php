@@ -25,24 +25,7 @@ class JSONArray extends JSONContainer
             if (!is_int($key)) {
                 throw new InvalidArgumentException("array keys must be integers, " . gettype($key) . "($key) given");
             }
-            if (!$entry instanceof JSONEntry) {
-                /** @noinspection DuplicatedCode */
-                if ($entry instanceof JSONStringable) {
-                    $this->entries[] = new JSONValue($entry);
-                } else if (is_array($entry)) {
-                    if (Utils::is_associative($entry)) {
-                        $this->entries[] = new JSONObject($entry);
-                    } else {
-                        $this->entries[] = new JSONArray($entry);
-                    }
-                } else if (is_object($entry)) {
-                    $this->entries[] = new JSONObject($entry);
-                } else {
-                    $this->entries[] = new JSONValue($entry);
-                }
-            } else {
-                $this->entries[] = $entry;
-            }
+            $this->addEntry($entry, $key);
         }
     }
 

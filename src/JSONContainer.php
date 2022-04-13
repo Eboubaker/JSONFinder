@@ -7,7 +7,9 @@ use ArrayIterator;
 use Closure;
 use Countable;
 use Eboubaker\JSON\Contracts\JSONEntry;
+use Eboubaker\JSON\Contracts\JSONStringable;
 use Generator;
+use InvalidArgumentException;
 use IteratorAggregate;
 use RecursiveArrayIterator;
 
@@ -21,6 +23,33 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * @var array<int|string,JSONEntry>
      */
     protected array $entries;
+
+
+    /**
+     * @param $entry mixed|JSONEntry
+     * @param $key int|string
+     * @throws InvalidArgumentException if entry is not allowed.
+     */
+    protected function addEntry($entry, $key)
+    {
+        if (!$entry instanceof JSONEntry) {
+            if ($entry instanceof JSONStringable) {
+                $this->entries[$key] = new JSONValue($entry);
+            } else if (is_array($entry)) {
+                if (Utils::is_associative($entry)) {
+                    $this->entries[$key] = new JSONObject($entry);
+                } else {
+                    $this->entries[$key] = new JSONArray($entry);
+                }
+            } else if (is_object($entry)) {
+                $this->entries[$key] = new JSONObject($entry);
+            } else {
+                $this->entries[$key] = new JSONValue($entry);
+            }
+        } else {
+            $this->entries[$key] = $entry;
+        }
+    }
 
     /**
      * json container always returns itself
