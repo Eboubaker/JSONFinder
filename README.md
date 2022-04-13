@@ -101,6 +101,8 @@ $obj = new JSONObject([
     ]
 ]);
 
+echo $obj->get('formats'); // empty array [], $obj does not contain 'formats' path
+
 $result = $obj->get('meta.id'); // ['meta.id' => JSONValue("12345")]
 $vide_id = array_values($result)[0];
 
@@ -197,7 +199,7 @@ echo $comment_with_bad_words['id'];// "1334"
 ### Controlling results of JSONFinder
 
 you can add flags to the JSONFinder constructor to set the allowed types of values that the JSONFinder will return.  
-for example if you want to also include javascript object in the resutls you can add the T_JS flag. this will also match
+for example if you want to also include javascript objects in the resutls you can add the T_JS flag. this will also match
 javascript object-keys or javascript strings that are quoted with single quote `'`
 
 ```php
