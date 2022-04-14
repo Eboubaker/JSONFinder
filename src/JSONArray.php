@@ -15,15 +15,18 @@ class JSONArray extends JSONContainer
     private static JSONFinder $valueFinder;
 
     /**
-     * @param array<int,mixed|JSONEntry|JSONStringable> $entries
+     * @param array<JSONEntry|JSONStringable>|iterable $entries
      * @throws InvalidArgumentException if the array contains a non integer key, or the tail values of the array are not primitive types
      */
-    public function __construct(array $entries)
+    public function __construct($entries)
     {
+        if (!is_iterable($entries)) {
+            throw new InvalidArgumentException('The entries must be iterable');
+        }
         $this->entries = [];
         foreach ($entries as $key => $entry) {
             if (!is_int($key)) {
-                throw new InvalidArgumentException("array keys must be integers, " . gettype($key) . "($key) given");
+                throw new InvalidArgumentException("array keys must be integers, " . gettype($key) . " given");
             }
             $this->addEntry($entry, $key);
         }
