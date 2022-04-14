@@ -474,6 +474,28 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     }
 
     /**
+     * check if this container contains the same entry keys and values as $other
+     * @param $other JSONContainer|mixed the other array or object to compare with
+     * @return bool returns true if all keys and values are the same with $other, otherwise false.
+     */
+    public function equals($other, $strict = true): bool
+    {
+        if (!($other instanceof JSONContainer)) return false;
+        foreach ($this->entries as $key => $entry) {
+            if (!$other->offsetExists($key)) return false;
+            if ($entry instanceof JSONContainer) {
+                if (!$entry->equals($other[$key])) {
+                    return false;
+                }
+            } else {// should be and must be a JSONValue
+                /** @var $entry JSONValue */
+                $entry->equals($other[$key], $strict);
+            }
+        }
+        return true;// empty or everything is equal
+    }
+
+    /**
      * serialize the json with applied indentation
      * @param int $indent number of spaces to indent
      * @return string returns the prettified json
