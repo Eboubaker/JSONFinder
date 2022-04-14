@@ -96,14 +96,14 @@ class JSONValue implements JSONEntry
     public function unserialize($data): JSONValue
     {
         if (self::$valueFinder === null) {
-            self::$valueFinder = new JSONFinder(
+            self::$valueFinder = JSONFinder::make(
                 JSONFinder::T_STRING
                 | JSONFinder::T_BOOL
                 | JSONFinder::T_NULL
                 | JSONFinder::T_NUMBER
             );
         }
-        return self::$valueFinder->findJsonEntries($data)[0];
+        return self::$valueFinder->findEntries($data)[0];
     }
 
     /**

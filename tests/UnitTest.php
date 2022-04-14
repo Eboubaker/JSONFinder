@@ -30,7 +30,7 @@ final class UnitTest extends TestCase
 
     public function testCanParseCleanJson(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
+        $parsed = JSONFinder::make()->findEntries($this->validJSONString);
         $this->assertCount(1, $parsed);
         $v = json_encode(json_decode('' . $parsed[0]));
         $this->assertNotEmpty($v);
@@ -40,12 +40,12 @@ final class UnitTest extends TestCase
 
     public function testReadableStringIsCompatibleWithJsonDecode(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
+        $parsed = JSONFinder::make()->findEntries($this->validJSONString);
         $v = json_encode(json_decode($parsed[0]->toReadableString(2)));
         $this->assertNotEmpty($v);
         $this->assertEquals(json_encode(json_decode($this->validJSONString)), $v);
 
-        $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
+        $parsed = JSONFinder::make()->findEntries($this->rawHTMLResponse);
         foreach ($parsed->entries() as $entry) {
             $decoded = json_decode($entry->toReadableString(2));
             $this->assertEquals(JSON_ERROR_NONE, json_last_error());
@@ -56,28 +56,28 @@ final class UnitTest extends TestCase
 
     public function testToReadableStringDidNotChangeOutCome(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
+        $parsed = JSONFinder::make()->findEntries($this->rawHTMLResponse);
         $this->assertEquals("f8cb82c5544ed1fb18a1a3c3eb099eaa", md5($parsed->toReadableString(2)));
     }
 
 
     public function testCanCountEntries(): void
     {
-        $count = (new JSONFinder(JSONFinder::T_ALL_JSON))->findJsonEntries($this->rawHTMLResponse)->count();
+        $count = JSONFinder::make(JSONFinder::T_ALL_JSON)->findEntries($this->rawHTMLResponse)->count();
         $this->assertEquals(420, $count);
     }
 
 
     public function testCanCountEntriesWithJS(): void
     {
-        $count = (new JSONFinder(JSONFinder::T_ALL_JSON | JSONFinder::T_JS))->findJsonEntries($this->rawHTMLResponse)->count();
+        $count = JSONFinder::make(JSONFinder::T_ALL_JSON | JSONFinder::T_JS)->findEntries($this->rawHTMLResponse)->count();
         $this->assertEquals(225, $count);
     }
 
 
     public function testIsCompatibleWithJsonDecode(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
+        $parsed = JSONFinder::make()->findEntries($this->validJSONString);
         foreach ($parsed as $item) {
             json_decode(strval($item));
             $this->assertEquals(JSON_ERROR_NONE, json_last_error());
@@ -87,21 +87,21 @@ final class UnitTest extends TestCase
 
     public function testCanCountAllContainedEntries(): void
     {
-        $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
+        $parsed = JSONFinder::make()->findEntries($this->rawHTMLResponse);
         $this->assertEquals(1732, $parsed->countAll());
     }
 
 
     public function testCanCountAllContainedEntriesWithJS(): void
     {
-        $parsed = (new JSONFinder(JSONFinder::T_ARRAY | JSONFinder::T_OBJECT | JSONFinder::T_JS))->findJsonEntries($this->rawHTMLResponse);
+        $parsed = JSONFinder::make(JSONFinder::T_ARRAY | JSONFinder::T_OBJECT | JSONFinder::T_JS)->findEntries($this->rawHTMLResponse);
         $this->assertEquals(1858, $parsed->countAll());
     }
 
 
     public function testCanIterateOverValuesAndAccessWithArraySyntax(): void
     {
-        $found = (new JSONFinder())->findJsonEntries($this->rawHTMLResponse);
+        $found = JSONFinder::make()->findEntries($this->rawHTMLResponse);
         $str = '';
         foreach ($found->values() as $key => $item) {
             $item = $item->value();
@@ -116,7 +116,7 @@ final class UnitTest extends TestCase
 
     public function testCanDoFiltering(): void
     {
-        $count = fn($types) => (new JSONFinder($types))->findJsonEntries($this->rawHTMLResponse)->count();
+        $count = fn($types) => JSONFinder::make($types)->findEntries($this->rawHTMLResponse)->count();
         //@formatter:off
         $null=7;$bool=22;$num=79;$str=217;$obj=6;$arr=61;$e_obj=16;$e_arr=12;
         //@formatter:on
@@ -141,7 +141,7 @@ final class UnitTest extends TestCase
      */
     public function testCanDoFilteringWithJSFlag(): void
     {
-        $count = fn($types) => (new JSONFinder($types))->findJsonEntries($this->rawHTMLResponse)->count();
+        $count = fn($types) => JSONFinder::make($types)->findEntries($this->rawHTMLResponse)->count();
         //@formatter:off
         $null=1;$bool=2;$num=19;$str=158;$obj=9;$arr=19;$e_obj=16;$e_arr=1;
         //@formatter:on
@@ -161,24 +161,6 @@ final class UnitTest extends TestCase
         $this->assertEquals($all, $count(JSONFinder::T_ALL_JSON | JSONFinder::T_JS));
     }
 
-
-    /**
-     * checks if we can convert a php variable into json string.
-    public function testCanEncodeObjects(): void
-    {
-        $obj = new JSONObject([
-            'a' => 'b',
-            'c' => 'd',
-            "e" => [
-                "f" => "g",
-                "h" => [
-                    "i" => "j",
-                    "k" => [1, 2, 3e-13]
-                ]
-            ]
-        ]);
-        $this->assertEquals('{"a":"b","c":"d","e":{"f":"g","h":{"i":"j","k":[1,2,3.0E-13]}}}', strval($obj));
-    }
 
     /**
      * @testdox can do custom conversion with JSONStringable
@@ -419,8 +401,8 @@ final class UnitTest extends TestCase
     public function testCanDecodeUtf8()
     {
         $str = '{"language":{"name":"الإنجليزية","flag":"🏴"}}';
-        $this->assertEquals($str, strval((new JSONFinder())->findJsonEntries($str)[0]));
+        $this->assertEquals($str, strval(JSONFinder::make()->findEntries($str)[0]));
         $str = '{"char":"\u0645"}}';
-        $this->assertEquals('{"char":"م"}', strval((new JSONFinder())->findJsonEntries($str)[0]));
+        $this->assertEquals('{"char":"م"}', strval(JSONFinder::make()->findEntries($str)[0]));
     }
 }

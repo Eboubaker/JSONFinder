@@ -18,12 +18,12 @@ suppose you want to scrap all json from an http response (from &lt;script&gt; ta
 use Eboubaker\JSON\JSONFinder;
 
 $html = file_get_contents('http://www.youtube.com');
-$finder = new JSONFinder();
+$finder = JSONFinder::make();
 
 /**
  * @var \Eboubaker\JSON\JSONArray $foundEntries
  */
-$foundEntries = $finder->findJsonEntries($html);
+$foundEntries = $finder->findEntries($html);
 
 // associative array of all found json entries
 $associative = $foundEntries->assoc();
@@ -210,14 +210,14 @@ echo $comment_with_bad_words['id'];// "1334"
 
 ### Controlling results of JSONFinder
 
-you can add flags to the JSONFinder constructor to set the allowed types of values that the JSONFinder will return.  
-for example if you want to also include javascript objects in the resutls you can add the T_JS flag. this will also match
-javascript object-keys or javascript strings that are quoted with single quote `'`
+you can add flags to the JSONFinder factory to set the allowed types of values that the JSONFinder will return.  
+for example if you want to also include javascript objects in the resutls you can add the T_JS flag. this will also
+match javascript object-keys or javascript strings that are quoted with single quote `'`
 
 ```php
-$finder = new JSONFinder(JSONFinder::T_ALL_JSON | JSONFinder::T_JS);
-$finder->findJsonEntries("{mykey: 1}");// [JSONObject({"mykey":1})]
-$finder->findJsonEntries("{'stringkey': 'stringvalue'}");// [JSONObject({"stringkey":"stringvalue"})]
+$finder = JSONFinder::make(JSONFinder::T_ALL_JSON | JSONFinder::T_JS);
+$finder->findEntries("{mykey: 1}");// [JSONObject({"mykey":1})]
+$finder->findEntries("{'stringkey': 'stringvalue'}");// [JSONObject({"stringkey":"stringvalue"})]
 ```
 
 All other functions are self documented with PHPDoc.
