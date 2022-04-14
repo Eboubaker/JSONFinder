@@ -14,13 +14,19 @@ class JSONObject extends JSONContainer
     private static JSONFinder $valueFinder;
 
     /**
-     * @param object|array<string,JSONEntry|mixed> $entries
+     * @param object|iterable|array<string,JSONEntry|mixed> $entries
      * @throws InvalidArgumentException if the array or the object contains a tail value which is not a primitive type
      */
     public function __construct($entries)
     {
+        if (!is_iterable($entries)) {
+            throw new InvalidArgumentException('The entries must be iterable');
+        }
         $this->entries = [];
         foreach ($entries as $key => $entry) {
+            if (!is_string($key) && !is_integer($key)) {// just in case
+                throw new InvalidArgumentException("object keys must be strings or integers, " . gettype($key) . "given");
+            }
             $this->addEntry($entry, $key);
         }
     }

@@ -6,10 +6,12 @@ require_once "vendor/autoload.php";
 
 use Eboubaker\JSON\Contracts\JSONEntry;
 use Eboubaker\JSON\Contracts\JSONStringable;
+use Eboubaker\JSON\JSONArray;
 use Eboubaker\JSON\JSONContainer;
 use Eboubaker\JSON\JSONFinder;
 use Eboubaker\JSON\JSONObject;
 use Eboubaker\JSON\JSONValue;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 
@@ -429,5 +431,42 @@ final class UnitTest extends TestCase
         foreach ($entries as $entry) {
             $this->assertEquals($entry instanceof JSONContainer, $entry->isContainer());
         }
+    }
+
+    public function testWillThrowOnInvalidEntryValue()
+    {
+        $throws = function ($callback) {
+            try {
+                $callback();
+            } catch (InvalidArgumentException $e) {
+                return true;
+            }
+            return false;
+        };
+        $this->assertTrue($throws(function () {
+            /** @noinspection PhpParamsInspection */
+            new JSONValue(["foo"]);
+        }));
+        $this->assertFalse($throws(function () {
+            new JSONValue(new class implements JSONStringable {
+                public function toJSONString(): string
+                {
+                    return "foo";
+                }
+            });
+        }));
+        $this->assertTrue($throws(function () {
+            new JSONArray(["foo" => 1]);
+        }));
+        $this->assertTrue($throws(function () {
+            new JSONArray("wadadada");
+        }));
+        $this->assertTrue($throws(function () {
+            /** @noinspection PhpParamsInspection */
+            new JSONObject("wadadada");
+        }));
+        $this->assertTrue($throws(function () {
+            new JSONObject(new \ReflectionObject((object)[]));
+        }));
     }
 }
