@@ -303,11 +303,11 @@ final class UnitTest extends TestCase
                 ]
             ]
         ]);
-        $this->assertEquals('b', array_values($obj->get('a'))[0]->value());
-        $this->assertEquals('g', array_values($obj->get('e.f'))[0]->value());
-        $this->assertCount(2, $obj->get('e.*.i'));
-        $this->assertCount(1, $obj->get('e.*.i', fn($v) => $v->value() === 'j'));
-        $this->assertEquals('j', array_values($obj->get('e.*.i', fn($v) => $v->value() === 'j'))[0]->value());
+        $this->assertEquals('b', array_values($obj->getAll('a'))[0]->value());
+        $this->assertEquals('g', array_values($obj->getAll('e.f'))[0]->value());
+        $this->assertCount(2, $obj->getAll('e.*.i'));
+        $this->assertCount(1, $obj->getAll('e.*.i', fn($v) => $v->value() === 'j'));
+        $this->assertEquals('j', array_values($obj->getAll('e.*.i', fn($v) => $v->value() === 'j'))[0]->value());
     }
 
     /**
@@ -372,7 +372,7 @@ final class UnitTest extends TestCase
                 ]
             ]
         ]);
-        $this->assertEquals('s', $obj->find([
+        $this->assertEquals('s', $obj->search([
             'extra.r' => fn(JSONEntry $v) => $v->matches("/s/"),
             '*.q.**.x' => fn(JSONEntry $v) => $v->matches("/y/")
         ])['extra']['r']->value());
@@ -421,25 +421,25 @@ final class UnitTest extends TestCase
         ]);
 
         // get first object which matches these paths/filters.
-        $comment_with_likes = $object->find([
+        $comment_with_likes = $object->search([
             "content",
             "likes" => fn(JSONEntry $v) => $v->value() > 0
         ]);
         $this->assertEquals('{"id":"1134","likes":2,"replies":[],"content":"thanks for sharing"}', strval($comment_with_likes));
 
-        $post_with_comment_replies = $object->find([
+        $post_with_comment_replies = $object->search([
             "comments.*.replies"
         ]);
 
         $this->assertEquals("1234", $post_with_comment_replies['id']->value());
 
-        $comment_with_replies = $object->find([
+        $comment_with_replies = $object->search([
             "replies.*"
         ]);
 
         $this->assertEquals("1334", $comment_with_replies['id']->value());
 
-        $comment_with_bad_words = $object->find([
+        $comment_with_bad_words = $object->search([
             "content" => fn(JSONEntry $v) => $v->matches('/worst|bad/')
         ]);
 
