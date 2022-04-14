@@ -18,7 +18,7 @@ class JSONArray extends JSONContainer
      * @param array<JSONEntry|JSONStringable>|iterable $entries
      * @throws InvalidArgumentException if the array contains a non integer key, or the tail values of the array are not primitive types
      */
-    public function __construct($entries)
+    public function __construct($entries = [])
     {
         if (!is_iterable($entries)) {
             throw new InvalidArgumentException('The entries must be iterable');
