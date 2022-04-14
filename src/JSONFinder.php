@@ -197,6 +197,19 @@ class JSONFinder
     }
 
     /**
+     * code-point to utf8 string
+     * @see https://en.wikipedia.org/wiki/UTF-8#Encoding
+     */
+    private function cptoUTF8($cp)
+    {
+        if ($cp <= 0x7F) return chr($cp);
+        if ($cp <= 0x7FF) return chr(($cp >> 6) + 192) . chr(($cp & 63) + 128);
+        if ($cp <= 0xFFFF) return chr(($cp >> 12) + 224) . chr((($cp >> 6) & 63) + 128) . chr(($cp & 63) + 128);
+        if ($cp <= 0x1FFFFF) return chr(($cp >> 18) + 240) . chr((($cp >> 12) & 63) + 128) . chr((($cp >> 6) & 63) + 128) . chr(($cp & 63) + 128);
+        return '';
+    }
+
+    /**
      * read through the string characters until an unclosing quote is found, return string that is between the first non escaped quote and the last non escaped quote
      */
     private function parseString(string $raw, int $len, int $from, string $quote): ?JTokenStruct
@@ -219,11 +232,8 @@ class JSONFinder
                         // invalid hex char-code
                         return null;
                     }
-                    // should we use mb_string here?,
-                    // do a function_exists(mb_convert_encoding) check
-                    // and use it if it is available to increase performance
-                    // i don't like this html_entity_decode() call
-                    $chars .= html_entity_decode("&#x$hex;", ENT_COMPAT, 'UTF-8');
+                    // convert codepoint to utf8
+                    $chars .= $this->cptoUTF8(hexdec($hex));
                     $i += 5;
                 } //@formatter:off
                 else if($code === '\\'){ $chars .= "\\";$i++; }

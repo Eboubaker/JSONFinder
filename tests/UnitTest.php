@@ -446,4 +446,15 @@ final class UnitTest extends TestCase
         $this->assertEquals("1334", $comment_with_bad_words['id']->value());
     }
 
+    /**
+     * @coversNothing
+     * @testdox can decode utf8
+     */
+    public function testCanDecodeUtf8()
+    {
+        $str = '{"language":{"name":"الإنجليزية","flag":"🏴"}}';
+        $this->assertEquals($str, strval((new JSONFinder())->findJsonEntries($str)[0]));
+        $str = '{"char":"\u0645"}}';
+        $this->assertEquals('{"char":"م"}', strval((new JSONFinder())->findJsonEntries($str)[0]));
+    }
 }
