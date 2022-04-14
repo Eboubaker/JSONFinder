@@ -488,22 +488,22 @@ final class UnitTest extends TestCase
             yield "foo";
             yield "foobar" => "bar";
         };
-        $arr = new JSONArray([]);
+        $arr = new JSONArray();
         $arr[] = $gen();
         $this->assertEquals("foo", $arr->get('0.0')->value());
 
         $this->assertTrue($throws(function () use ($gen) {
-            $arr = new JSONArray([]);
+            $arr = new JSONArray();
             $arr["xyz"] = $gen();
         }));
 
-        $obj = new JSONObject([]);
+        $obj = new JSONObject();
         $obj[] = $gen();
         $this->assertEquals("foo", $obj->get('0.0')->value());
 
 
-        $obj = new JSONObject([]);
-        $obj[] = $genKeys();
-        $this->assertEquals("bar", $obj->get('0.foobar')->value());
+        $obj = new JSONObject();
+        $obj["x"] = $genKeys();
+        $this->assertEquals("bar", $obj->get('x.foobar')->value());
     }
 }

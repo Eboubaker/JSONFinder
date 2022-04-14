@@ -17,7 +17,7 @@ class JSONObject extends JSONContainer
      * @param object|iterable|array<string,JSONEntry|mixed> $entries
      * @throws InvalidArgumentException if the array or the object contains a tail value which is not a primitive type
      */
-    public function __construct($entries)
+    public function __construct($entries = [])
     {
         if (!is_iterable($entries)) {
             throw new InvalidArgumentException('The entries must be iterable');
