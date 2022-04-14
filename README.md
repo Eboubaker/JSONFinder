@@ -71,9 +71,18 @@ echo strval($obj);// '{"a":"b","e":{"f":null,"h":{"i":"j","k":[1,2,3.0E-13,{"x":
 
 ### JSON Query
 
-you can search for values inside the json entries. with dot notation and wildcard "`*`" "`**`" search.
+you can search multiple for values inside the json entries. with dot notation path and wildcards "`*`" "`**`".
+
+| Path              | Meaning     |
+| :---              | :----       |
+| `video.formats.*` | every entry inside `video.formats` (3 objects)       |
+| `video.**`        | Every deeply nested value inside `video` ("12345","mp4","https://<span></span>example.com/video720.mp4",..., "1280x720") (10 values)       |
+
+------------------------------------------
 
 ```php
+use Eboubaker\JSON\JSONObject;
+
 $obj = new JSONObject([
     "meta" => [
         "id" => "12345",
@@ -101,30 +110,33 @@ $obj = new JSONObject([
     ]
 ]);
 
-echo $obj->get('formats'); // empty array [], $obj does not contain 'formats' path
+echo $obj->getAll('formats'); // empty array [], $obj does not contain 'formats' path
 
-$result = $obj->get('meta.id'); // ['meta.id' => JSONValue("12345")]
-$vide_id = array_values($result)[0];
+$result = $obj->getAll('meta.id'); // ['meta.id' => JSONValue("12345")]
+$video_id = array_values($result)[0];
 
 // get all deep entries that contains a 'name' key
-$has_id = $obj->get('**.id');
+$has_id = $obj->getAll('**.id');
 
 // get all formats in 'video.formats' path
-$all_formats = $obj->get('video.formats.*');
+$all_formats = $obj->getAll('video.formats.*');
 
 // you can apply a filter to the results
-$mp4_formats = $obj->get('video.formats.*', fn($v) => $v->get('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
+$mp4_formats = $obj->getAll('video.formats.*', fn($v) => $v->getAll('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
 
 ```
 
 ### Find JSON object/array
 
-You can find a json object/array which contains a specific keys and values using `JSONObject::find()`
-or `JSONArray::find()`.  
+You can find a single json object/array which contains specific keys using `JSONObject::search()`
+or `JSONArray::search()`.  
 the method accept a list of paths with optional value filter.  
-the provided paths must exist on the target and match the provided filters if they exist.
+will returns the target that contains all the provided paths.
 
 ```php
+use Eboubaker\JSON\JSONObject;
+use Eboubaker\JSON\Contracts\JSONEntry;
+
 $object = new JSONObject([
     "response" => [
         "hash" => "a5339be0849ced1ffe",

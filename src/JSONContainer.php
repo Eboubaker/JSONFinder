@@ -171,95 +171,6 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         return strval($this);
     }
 
-    /**
-     * find entries that match the given path.
-     * the path is a dot notation path which accepts wildcards of "<b><code>*</code></b>" and "<b><code>**</code></b>". path segments are separated by a dot "<b>.</b>"<br>
-     * if the path ends with a "<b><code>**</code></b>" wildcard, the result will be all nested {@link JSONValue}s of the preceding path segments.<br>
-     * if the path ends with a "<b><code>*</code></b>" wildcard, the result will be all entries of the preceding path segments.
-     * @param string $path the path to search for
-     * @param Closure|null $matcher optional matcher function to filter the results, it will be called with the found {@link JSONValue} as the first parameter and should return a boolean value to indicate if the entry should be included in the result or not
-     * @return array<string,JSONEntry>|false returns array of found entries or false if arguments are invalid
-     */
-    public function get(string $path, Closure $matcher = null)
-    {
-        if (!$path
-            || strpos($path, '..') !== false
-            || strpos($path, '**.*') !== false) {
-            return false;
-        }
-        $segments = explode('.', $path);
-        if (empty($segments)) return false;
-        return $this->internal_get_path(explode('.', $path), $matcher);
-    }
-
-    /**
-     * gets results of a single path
-     */
-    private function internal_get_path(array $segments, ?Closure $matcher): array
-    {
-        $result = [];
-        $segment = $segments[0];
-        array_shift($segments);// next segments will be passed to children if needed
-        $is_last_segment = empty($segments);
-        if ($segment === '**') {
-            if ($is_last_segment) {
-                // add all nested values
-                foreach ($this->values() as $key => $value) {
-                    if ($matcher != null && !$matcher($value)) continue;// matcher did not accept it, skip it.
-                    $result[$key] = $value;
-                }
-            } else {
-                // add all values found by containers that contains the next segments
-                foreach ($this->containersIterator() as $entryKey => $entry) {
-                    foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
-                        $result[$entryKey . '.' . $key] = $resultEntry;
-                    }
-                }
-                // add all values found by other deep containers that contains the next segments
-                foreach ($this->containersIterator() as $entryKey => $entry) {
-                    foreach ($entry->internal_get_path(['**', ...$segments], $matcher) as $key => $resultEntry) {
-                        $result[$entryKey . '.' . $key] = $resultEntry;
-                    }
-                }
-            }
-        } else if ($segment === '*') {
-            if ($is_last_segment) {
-                // last segment, add all entries
-                foreach ($this->entries as $key => $value) {
-                    if ($matcher != null && !$matcher($value)) continue;// matcher did not accept it, skip it
-                    $result[$key] = $value;
-                }
-            } else {
-                // not last segment, add all values found by containers that contains the next segments
-                foreach ($this->containersIterator() as $entryKey => $entry) {
-                    foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
-                        $result[$entryKey . '.' . $key] = $resultEntry;
-                    }
-                }
-            }
-        } else {
-            // check if the current segment exists in this container as an entry
-            if (isset($this[$segment])) {
-                $entry = $this[$segment];
-                // entry was found, check if it is the last segment or not
-                if ($is_last_segment) {
-                    // last segment, add it if the matcher accepted it.
-                    if ($matcher == null || $matcher($entry)) {
-                        // matcher was null or matcher accepted it.
-                        $result[$segment] = $entry;
-                    }
-                } else {
-                    // not the last segment, pass the next segments to the entry if it is container and add the results
-                    if ($entry instanceof JSONContainer) {
-                        foreach ($entry->internal_get_path($segments, $matcher) as $key => $resultEntry) {
-                            $result[$segment . '.' . $key] = $resultEntry;
-                        }
-                    }
-                }
-            }
-        }
-        return $result;
-    }
 
     /**
      * returns list of entries that are {@link JSONObject} or {@link JSONArray}
@@ -289,6 +200,208 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
     }
 
+    /**
+     * returns the first entry or null if empty.
+     */
+    public function first(): ?JSONEntry
+    {
+        return reset($this->entries) ?: null;
+    }
+
+    /**
+     * returns the last entry or null if empty.
+     */
+    public function last(): ?JSONEntry
+    {
+        return end($this->entries) ?: null;
+    }
+
+    /**
+     * @return bool returns true if entries size is 0.
+     */
+    public function isEmpty(): bool
+    {
+        return count($this->entries) > 0;
+    }
+
+    public function matches(string $regex): bool
+    {
+        // a JSONContainer is not a JSONValue and cannot match a regex.
+        return false;
+    }
+
+    /**
+     * true if a value found that matches the path. accepts wildcards <code>*</code> and <code>**</code>.
+     * @param string $path path to the value.
+     */
+    public function has(string $path): bool
+    {
+        return null !== $this->get($path);
+    }
+
+    /**
+     * find first value that matches the dot notation path. accepts wildcards <code>*</code> and <code>**</code>.<br>
+     * @param string $path path to the value.
+     * @param $default mixed|callable default value to return if no result was found, can be a callback.
+     */
+    public function get(string $path, $default = null): ?JSONEntry
+    {
+        if (!$path
+            || strpos($path, '..') !== false
+            || strpos($path, '**.*') !== false) {
+            return null;
+        }
+        $segments = explode('.', $path);
+        if (empty($segments)) return null;
+        return $this->internal_get(explode('.', $path))
+            ?? ($default instanceof Closure ? $default() : $default);
+    }
+
+    /**
+     * find entries that match the given path.
+     * the path is a dot notation path which accepts wildcards of "<b><code>*</code></b>" and "<b><code>**</code></b>". path segments are separated by a dot "<b>.</b>"<br>
+     * if the path ends with a "<b><code>**</code></b>" wildcard, the result will be all nested {@link JSONValue}s of the preceding path segments.<br>
+     * if the path ends with a "<b><code>*</code></b>" wildcard, the result will be all entries of the preceding path segments.
+     * @param string $path the path to search for
+     * @param Closure|null $filter optional filter function to filter the results, it will be called with the found {@link JSONValue} as the first parameter and should return a boolean value to indicate if the entry should be included in the result or not
+     * @return array<string,JSONEntry>|false returns array of found entries or false if arguments are invalid
+     */
+    public function getAll(string $path, Closure $filter = null)
+    {
+        if (!$path
+            || strpos($path, '..') !== false
+            || strpos($path, '**.*') !== false) {
+            return false;
+        }
+        $segments = explode('.', $path);
+        if (empty($segments)) return false;
+        return $this->internal_getAll(explode('.', $path), $filter);
+    }
+
+    /**
+     * gets signle result of a single path
+     */
+    private function internal_get(array $segments): ?JSONEntry
+    {
+        $segment = $segments[0];
+        array_shift($segments);// next segments will be passed to children if needed
+        $is_last_segment = empty($segments);
+        if ($segment === '**') {
+            if ($is_last_segment) {
+                foreach ($this->values() as $entry) {
+                    return $entry;
+                }
+            } else {
+                foreach ($this->containersIterator() as $entry) {
+                    $v = $entry->internal_get($segments);
+                    if ($v !== null) {
+                        return $v;
+                    }
+                }
+                // add all values found by other deep containers that contains the next segments
+                foreach ($this->containersIterator() as $entry) {
+                    $v = $entry->internal_get(['**', ...$segments]);
+                    if ($v !== null) {
+                        return $v;
+                    }
+                }
+            }
+        } else if ($segment === '*') {
+            if ($is_last_segment) {
+                foreach ($this->entries as $entry) {
+                    return $entry;
+                }
+            } else {
+                foreach ($this->containersIterator() as $entryKey => $entry) {
+                    $v = $entry->internal_get($segments);
+                    if ($v !== null) {
+                        return $v;
+                    }
+                }
+            }
+        } else {
+            if (isset($this[$segment])) {
+                $entry = $this[$segment];
+                if ($is_last_segment) {
+                    return $entry;
+                } else {
+                    if ($entry instanceof JSONContainer) {
+                        return $entry->internal_get($segments);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * gets results of a single path
+     */
+    private function internal_getAll(array $segments, ?Closure $filter): array
+    {
+        $result = [];
+        $segment = $segments[0];
+        array_shift($segments);// next segments will be passed to children if needed
+        $is_last_segment = empty($segments);
+        if ($segment === '**') {
+            if ($is_last_segment) {
+                // add all nested values
+                foreach ($this->values() as $key => $value) {
+                    if ($filter != null && !$filter($value)) continue;// value did not pass the filter, skip it...
+                    $result[$key] = $value;
+                }
+            } else {
+                // add all values found by containers that contains the next segments
+                foreach ($this->containersIterator() as $entryKey => $entry) {
+                    foreach ($entry->internal_getAll($segments, $filter) as $key => $resultEntry) {
+                        $result[$entryKey . '.' . $key] = $resultEntry;
+                    }
+                }
+                // add all values found by other deep containers that contains the next segments
+                foreach ($this->containersIterator() as $entryKey => $entry) {
+                    foreach ($entry->internal_getAll(['**', ...$segments], $filter) as $key => $resultEntry) {
+                        $result[$entryKey . '.' . $key] = $resultEntry;
+                    }
+                }
+            }
+        } else if ($segment === '*') {
+            if ($is_last_segment) {
+                // last segment, add all entries
+                foreach ($this->entries as $key => $value) {
+                    if ($filter != null && !$filter($value)) continue;// value did not pass the filter, skip it...
+                    $result[$key] = $value;
+                }
+            } else {
+                // not last segment, add all values found by containers that contains the next segments
+                foreach ($this->containersIterator() as $entryKey => $entry) {
+                    foreach ($entry->internal_getAll($segments, $filter) as $key => $resultEntry) {
+                        $result[$entryKey . '.' . $key] = $resultEntry;
+                    }
+                }
+            }
+        } else {
+            // check if the current segment exists in this container as an entry
+            if (isset($this[$segment])) {
+                $entry = $this[$segment];
+                // entry was found, check if it is the last segment or not
+                if ($is_last_segment) {
+                    // last segment, add it if it passes the filter.
+                    if ($filter == null || $filter($entry)) {
+                        // filter was null or value did not pass the filter.
+                        $result[$segment] = $entry;
+                    }
+                } else {
+                    // not the last segment, pass the next segments to the entry if it is container and add the results
+                    if ($entry instanceof JSONContainer) {
+                        foreach ($entry->internal_getAll($segments, $filter) as $key => $resultEntry) {
+                            $result[$segment . '.' . $key] = $resultEntry;
+                        }
+                    }
+                }
+            }
+        }
+        return $result;
+    }
 
     /**
      * find a single {@link JSONArray} or {@link JSONObject} which contains all the provided paths.<br>
@@ -301,7 +414,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * provided paths or null if not found, returns false if one of the paths is invalid.
      * @noinspection PhpDocDuplicateTypeInspection
      */
-    public function find($paths)
+    public function search($paths)
     {
         $paths = (array)$paths;
         foreach ($paths as $k => $key) {
@@ -311,9 +424,9 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                     return false;
                 }
                 unset($paths[$k]);
-                $paths[$key] = null;// set matcher to null
+                $paths[$key] = null;// set filter to null
             } else if (!is_callable($key)) {
-                // expected a callback matcher
+                // expected a callback filter
                 return false;
             }
         }
@@ -326,19 +439,20 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
             $segments = explode('.', $path);
             if (empty($segments)) return false;
         }
-        return $this->internal_find($paths);
+        return $this->internal_search($paths);
     }
 
     /**
      * @param array $paths
      * @return JSONEntry|null
+     * @internal
      */
-    private function internal_find(array $paths): ?JSONContainer
+    private function internal_search(array $paths): ?JSONContainer
     {
         // we must have all the paths in this entry
         $foundPathsCount = 0;
-        foreach ($paths as $path => $matcher) {
-            if (empty($this->get($path, $matcher))) {
+        foreach ($paths as $path => $filter) {
+            if (empty($this->getAll($path, $filter))) {
                 // path not found
                 break;
             } else {
@@ -351,18 +465,12 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
         // not all paths were found, check if my children have the target
         foreach ($this->containersIterator() as $entry) {
-            $found = $entry->internal_find($paths);
+            $found = $entry->internal_search($paths);
             if ($found !== null) {
                 return $found;
             }
         }
         return null;
-    }
-
-    public function matches(string $regex): bool
-    {
-        // a JSONContainer is not a JSONValue
-        return false;
     }
 
     /**
