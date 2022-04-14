@@ -83,11 +83,7 @@ class JSONFinder
     /** strict mode keywords */
     private const JS_STRICT_KEYWORDS = array('implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield');
 
-    /**
-     * @param int $allowed_types allowed types that the parser should add to the resulting array of found tokens, does not affect the tokens that are nested in the array
-     * @throws InvalidArgumentException if $allowed_types contains an invalid type
-     */
-    public function __construct(int $allowed_types = JSONFinder::T_ARRAY | JSONFinder::T_OBJECT)
+    private function __construct(int $allowed_types)
     {
         if ($allowed_types & ~JSONFinder::T_ALL || $allowed_types === 0) {
             throw new InvalidArgumentException("invalid type: $allowed_types");
@@ -97,10 +93,21 @@ class JSONFinder
     }
 
     /**
+     * make a new JSONFinder instance with the specified types.
+     * @param int $allowed_types allowed types that the parser should add to the resulting array of found tokens, does not affect the tokens that are nested in the array
+     * @return static returns an new instance of JSONFinder
+     * @throws InvalidArgumentException if $allowed_types contains an invalid type
+     */
+    public static function make(int $allowed_types = JSONFinder::T_ARRAY | JSONFinder::T_OBJECT): JSONFinder
+    {
+        return new JSONFinder($allowed_types);
+    }
+
+    /**
      * find all possible valid json tokens in the given string
      * @return JSONArray {@link JSONArray} of all found {@link JSONEntry}s in the string
      */
-    public function findJsonEntries(string $text): JSONArray
+    public function findEntries(string $text): JSONArray
     {
         $values = [];
         $offset = 0;

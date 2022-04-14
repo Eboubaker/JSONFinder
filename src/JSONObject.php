@@ -83,8 +83,8 @@ class JSONObject extends JSONContainer
     public function unserialize($data): JSONObject
     {
         if (self::$valueFinder === null) {
-            self::$valueFinder = new JSONFinder(JSONFinder::T_OBJECT | JSONFinder::T_EMPTY_OBJECT);
+            self::$valueFinder = JSONFinder::make(JSONFinder::T_OBJECT | JSONFinder::T_EMPTY_OBJECT);
         }
-        return self::$valueFinder->findJsonEntries($data)[0];
+        return self::$valueFinder->findEntries($data)[0];
     }
 }
