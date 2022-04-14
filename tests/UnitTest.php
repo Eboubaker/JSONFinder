@@ -413,4 +413,12 @@ final class UnitTest extends TestCase
         $this->assertEquals(strval($entries), strval(unserialize($serialized)));
         $this->assertTrue(unserialize($serialized)->equals($entries));
     }
+
+    public function testCanCheckEqualityOfContainers()
+    {
+        $entries = JSONFinder::make(JSONFinder::T_ALL_JSON | JSONFinder::T_JS)->findEntries($this->rawHTMLResponse);
+        foreach ($entries as $entry) {
+            $this->assertTrue($entry->equals(unserialize(serialize($entry))));
+        }
+    }
 }
