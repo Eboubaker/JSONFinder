@@ -32,22 +32,42 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      */
     protected function addEntry($entry, $key)
     {
-        if (!$entry instanceof JSONEntry) {
-            if ($entry instanceof JSONStringable) {
-                $this->entries[$key] = new JSONValue($entry);
-            } else if (is_array($entry)) {
-                if (Utils::is_associative($entry)) {
-                    $this->entries[$key] = new JSONObject($entry);
-                } else {
-                    $this->entries[$key] = new JSONArray($entry);
-                }
-            } else if (is_object($entry)) {
-                $this->entries[$key] = new JSONObject($entry);
+        if (!($entry instanceof JSONEntry)) {
+            if ((is_iterable($entry) || is_object($entry)) && !($entry instanceof JSONStringable)) {
+                $this->entries[$key] = $this->iterable_to_container($entry);
             } else {
                 $this->entries[$key] = new JSONValue($entry);
             }
         } else {
             $this->entries[$key] = $entry;
+        }
+    }
+
+    /**
+     * @param $value iterable|object|array
+     * @return JSONContainer
+     */
+    protected function iterable_to_container($value): JSONContainer
+    {
+        $list = [];
+        $has_string_key = false;
+        foreach ($value as $key => $entry) {
+            if (!$has_string_key && is_string($key)) {
+                $has_string_key = true;
+                if ($value instanceof \ArrayAccess || is_array($value)) {
+                    $list = $value;
+                    break;
+                } else if (is_object($value)) {
+                    $list = get_object_vars($value);
+                    break;
+                }
+            }
+            $list[$key] = $entry;
+        }
+        if ($has_string_key) {
+            return new JSONObject($list);
+        } else {
+            return new JSONArray($list);
         }
     }
 
