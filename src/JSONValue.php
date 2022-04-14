@@ -93,9 +93,9 @@ class JSONValue implements JSONEntry
     /**
      * @throws InvalidArgumentException if data is not string or if no value found inside data
      */
-    public function unserialize($data): JSONValue
+    public function unserialize($data)
     {
-        if (self::$valueFinder === null) {
+        if (!isset(self::$valueFinder)) {
             self::$valueFinder = JSONFinder::make(
                 JSONFinder::T_STRING
                 | JSONFinder::T_BOOL
@@ -103,7 +103,7 @@ class JSONValue implements JSONEntry
                 | JSONFinder::T_NUMBER
             );
         }
-        return self::$valueFinder->findEntries($data)[0];
+        $this->value = self::$valueFinder->findEntries($data)[0]->value;
     }
 
     /**

@@ -80,11 +80,11 @@ class JSONArray extends JSONContainer
         return $str;
     }
 
-    public function unserialize($data): JSONArray
+    public function unserialize($data)
     {
-        if (self::$valueFinder === null) {
+        if (!isset(self::$valueFinder)) {
             self::$valueFinder = JSONFinder::make(JSONFinder::T_ARRAY | JSONFinder::T_EMPTY_ARRAY);
         }
-        return self::$valueFinder->findEntries($data)[0];
+        $this->entries = self::$valueFinder->findEntries($data)[0]->entries;
     }
 }
