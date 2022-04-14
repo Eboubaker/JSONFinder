@@ -220,7 +220,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      */
     public function isEmpty(): bool
     {
-        return count($this->entries) > 0;
+        return count($this->entries) === 0;
     }
 
     public function matches(string $regex): bool
