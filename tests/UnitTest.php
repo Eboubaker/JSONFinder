@@ -27,9 +27,7 @@ final class UnitTest extends TestCase
         }
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanParseCleanJson(): void
     {
         $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
@@ -39,9 +37,7 @@ final class UnitTest extends TestCase
         $this->assertEquals(json_encode(json_decode($this->validJSONString)), $v);
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testReadableStringIsCompatibleWithJsonDecode(): void
     {
         $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
@@ -57,27 +53,21 @@ final class UnitTest extends TestCase
         }
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testToReadableStringDidNotChangeOutCome(): void
     {
         $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
         $this->assertEquals("f8cb82c5544ed1fb18a1a3c3eb099eaa", md5($parsed->toReadableString(2)));
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanCountEntries(): void
     {
         $count = (new JSONFinder(JSONFinder::T_ALL_JSON))->findJsonEntries($this->rawHTMLResponse)->count();
         $this->assertEquals(420, $count);
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanCountEntriesWithJS(): void
     {
         $count = (new JSONFinder(JSONFinder::T_ALL_JSON | JSONFinder::T_JS))->findJsonEntries($this->rawHTMLResponse)->count();
@@ -85,9 +75,6 @@ final class UnitTest extends TestCase
     }
 
 
-    /**
-     * @coversNothing
-     */
     public function testIsCompatibleWithJsonDecode(): void
     {
         $parsed = (new JSONFinder)->findJsonEntries($this->validJSONString);
@@ -97,27 +84,21 @@ final class UnitTest extends TestCase
         }
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanCountAllContainedEntries(): void
     {
         $parsed = (new JSONFinder)->findJsonEntries($this->rawHTMLResponse);
         $this->assertEquals(1732, $parsed->countAll());
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanCountAllContainedEntriesWithJS(): void
     {
         $parsed = (new JSONFinder(JSONFinder::T_ARRAY | JSONFinder::T_OBJECT | JSONFinder::T_JS))->findJsonEntries($this->rawHTMLResponse);
         $this->assertEquals(1858, $parsed->countAll());
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanIterateOverValuesAndAccessWithArraySyntax(): void
     {
         $found = (new JSONFinder())->findJsonEntries($this->rawHTMLResponse);
@@ -132,9 +113,7 @@ final class UnitTest extends TestCase
         }
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanDoFiltering(): void
     {
         $count = fn($types) => (new JSONFinder($types))->findJsonEntries($this->rawHTMLResponse)->count();
@@ -158,7 +137,6 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @coversNothing
      * @testdox can do filtering with javascript flag on
      */
     public function testCanDoFilteringWithJSFlag(): void
@@ -186,8 +164,6 @@ final class UnitTest extends TestCase
 
     /**
      * checks if we can convert a php variable into json string.
-     * @coversNothing
-     */
     public function testCanEncodeObjects(): void
     {
         $obj = new JSONObject([
@@ -205,7 +181,6 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @coversNothing
      * @testdox can do custom conversion with JSONStringable
      */
     public function testCanDoCustomConversionWithJSONStringable(): void
@@ -223,7 +198,6 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @coversNothing
      * @testdox can do equality on JSONValues
      */
     public function testCanDoEqualityOnJSONValues(): void
@@ -259,9 +233,7 @@ final class UnitTest extends TestCase
         $this->assertFalse($v->equals($o2, true));
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanQueryValues(): void
     {
         $obj = new JSONObject([
@@ -310,9 +282,7 @@ final class UnitTest extends TestCase
         $this->assertEquals('j', array_values($obj->getAll('e.*.i', fn($v) => $v->value() === 'j'))[0]->value());
     }
 
-    /**
-     * @coversNothing
-     */
+
     public function testCanMatchValues(): void
     {
         $val = new JSONValue("a very small text?");
@@ -323,9 +293,6 @@ final class UnitTest extends TestCase
     }
 
 
-    /**
-     * @coversNothing
-     */
     public function testCanFindValues(): void
     {
         $obj = new JSONObject([
@@ -447,7 +414,6 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @coversNothing
      * @testdox can decode utf8
      */
     public function testCanDecodeUtf8()
