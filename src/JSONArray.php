@@ -62,6 +62,7 @@ class JSONArray extends JSONContainer
             if ($entry instanceof JSONArray || $entry instanceof JSONObject) {
                 $str .= $entry->__toReadableString($indent + $indentIncrease, $indentIncrease);
             } else {// it must be JSONValue
+                /** @var JSONValue $entry */
                 $str .= $entry;
             }
             if ($count < count($this->entries) - 1) {
