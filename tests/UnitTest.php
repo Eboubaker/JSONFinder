@@ -506,4 +506,14 @@ final class UnitTest extends TestCase
         $obj["x"] = $genKeys();
         $this->assertEquals("bar", $obj->get('x.foobar')->value());
     }
+
+    public function testCanUnsetWithArraySyntax()
+    {
+        $array = new JSONArray();
+        $array[] = (object)["x" => "var"];
+        $this->assertCount(1, $array);
+        unset($array[0]);
+        $this->assertTrue($array->isEmpty());
+        $this->assertCount(0, $array);
+    }
 }

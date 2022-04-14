@@ -19,7 +19,7 @@ class JSONObject extends JSONContainer
      */
     public function __construct($entries = [])
     {
-        if (!is_iterable($entries)) {
+        if (!is_iterable($entries) && !is_object($entries)) {
             throw new InvalidArgumentException('The entries must be iterable');
         }
         $this->entries = [];
@@ -95,24 +95,8 @@ class JSONObject extends JSONContainer
         /** @noinspection DuplicatedCode */
         if ($value instanceof JSONEntry) {
             parent::offsetSet($offset, $value);
-        } else if (is_iterable($value)) {
-            $list = [];
-            $has_string_key = false;
-            foreach ($value as $key => $entry) {
-                if (!$has_string_key && !is_string($key)) {
-                    $has_string_key = true;
-                    if ($value instanceof \ArrayAccess || is_array($value)) {
-                        $list = $value;
-                        break;
-                    }
-                }
-                $list[$key] = $entry;
-            }
-            if ($has_string_key) {
-                parent::offsetSet($offset, new JSONObject($list));
-            } else {
-                parent::offsetSet($offset, new JSONArray($list));
-            }
+        } else if (is_iterable($value) || is_object($value)) {
+            parent::offsetSet($offset, $this->iterable_to_container($value));
         } else {
             parent::offsetSet($offset, new JSONValue($value));
         }
