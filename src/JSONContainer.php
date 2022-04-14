@@ -51,6 +51,15 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
     }
 
+    public function offsetSet($offset, $value)
+    {
+        if (is_null($offset)) {
+            $this->entries[] = $value;
+        } else {
+            $this->entries[$offset] = $value;
+        }
+    }
+
     public function isContainer(): bool
     {
         return true;
@@ -118,16 +127,6 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         // if you are not sure if the container has the key use isset($obj[$offset]) before accessing to
         // avoid Undefined index exception
         return $this->entries[$offset];
-    }
-
-    public function offsetSet($offset, $value)
-    {
-        if ($value instanceof JSONEntry) {
-            $this->entries[$offset] = $value;
-        } else {
-            $this->entries[$offset] = new JSONValue($value);
-        }
-        $this->entries[$offset] = $value;
     }
 
     public function offsetUnset($offset)

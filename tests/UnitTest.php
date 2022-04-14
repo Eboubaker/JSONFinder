@@ -469,4 +469,41 @@ final class UnitTest extends TestCase
             new JSONObject(new \ReflectionObject((object)[]));
         }));
     }
+
+    public function testCanAddEntriesWithArraySyntax()
+    {
+        $throws = function ($callback) {
+            try {
+                $callback();
+            } catch (InvalidArgumentException $e) {
+                return true;
+            }
+            return false;
+        };
+        $gen = function () {
+            yield "foo";
+            yield "bar";
+        };
+        $genKeys = function () {
+            yield "foo";
+            yield "foobar" => "bar";
+        };
+        $arr = new JSONArray([]);
+        $arr[] = $gen();
+        $this->assertEquals("foo", $arr->get('0.0')->value());
+
+        $this->assertTrue($throws(function () use ($gen) {
+            $arr = new JSONArray([]);
+            $arr["xyz"] = $gen();
+        }));
+
+        $obj = new JSONObject([]);
+        $obj[] = $gen();
+        $this->assertEquals("foo", $obj->get('0.0')->value());
+
+
+        $obj = new JSONObject([]);
+        $obj[] = $genKeys();
+        $this->assertEquals("bar", $obj->get('0.foobar')->value());
+    }
 }
