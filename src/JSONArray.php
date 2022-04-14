@@ -83,6 +83,37 @@ class JSONArray extends JSONContainer
         return $str;
     }
 
+    public function offsetSet($offset, $value)
+    {
+        if (!is_integer($offset) && !is_null($offset)) {
+            throw new InvalidArgumentException("array keys must be integers, " . gettype($offset) . " given");
+        }
+        /** @noinspection DuplicatedCode */
+        if ($value instanceof JSONEntry) {
+            parent::offsetSet($offset, $value);
+        } else if (is_iterable($value)) {
+            $list = [];
+            $has_string_key = false;
+            foreach ($value as $key => $entry) {
+                if (!$has_string_key && !is_string($key)) {
+                    $has_string_key = true;
+                    if ($value instanceof \ArrayAccess || is_array($value)) {
+                        $list = $value;
+                        break;
+                    }
+                }
+                $list[$key] = $entry;
+            }
+            if ($has_string_key) {
+                parent::offsetSet($offset, new JSONObject($list));
+            } else {
+                parent::offsetSet($offset, new JSONArray($list));
+            }
+        } else {
+            parent::offsetSet($offset, new JSONValue($value));
+        }
+    }
+
     public function unserialize($data)
     {
         if (!isset(self::$valueFinder)) {
