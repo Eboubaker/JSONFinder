@@ -405,4 +405,12 @@ final class UnitTest extends TestCase
         $str = '{"char":"\u0645"}}';
         $this->assertEquals('{"char":"م"}', strval(JSONFinder::make()->findEntries($str)[0]));
     }
+
+    public function testCanSerializeEntries()
+    {
+        $entries = JSONFinder::make()->findEntries($this->validJSONString);
+        $serialized = serialize($entries);
+        $this->assertEquals(strval($entries), strval(unserialize($serialized)));
+        $this->assertTrue(unserialize($serialized)->equals($entries));
+    }
 }

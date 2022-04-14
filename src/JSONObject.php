@@ -81,11 +81,11 @@ class JSONObject extends JSONContainer
         return $str;
     }
 
-    public function unserialize($data): JSONObject
+    public function unserialize($data)
     {
-        if (self::$valueFinder === null) {
+        if (!isset(self::$valueFinder)) {
             self::$valueFinder = JSONFinder::make(JSONFinder::T_OBJECT | JSONFinder::T_EMPTY_OBJECT);
         }
-        return self::$valueFinder->findEntries($data)[0];
+        $this->entries = self::$valueFinder->findEntries($data)[0]->entries;
     }
 }
