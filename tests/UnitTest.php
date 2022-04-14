@@ -6,6 +6,7 @@ require_once "vendor/autoload.php";
 
 use Eboubaker\JSON\Contracts\JSONEntry;
 use Eboubaker\JSON\Contracts\JSONStringable;
+use Eboubaker\JSON\JSONContainer;
 use Eboubaker\JSON\JSONFinder;
 use Eboubaker\JSON\JSONObject;
 use Eboubaker\JSON\JSONValue;
@@ -419,6 +420,14 @@ final class UnitTest extends TestCase
         $entries = JSONFinder::make(JSONFinder::T_ALL_JSON | JSONFinder::T_JS)->findEntries($this->rawHTMLResponse);
         foreach ($entries as $entry) {
             $this->assertTrue($entry->equals(unserialize(serialize($entry))));
+        }
+    }
+
+    public function testCanCheckContainerIsContainer()
+    {
+        $entries = JSONFinder::make(JSONFinder::T_ALL_JSON | JSONFinder::T_JS)->findEntries($this->rawHTMLResponse);
+        foreach ($entries as $entry) {
+            $this->assertEquals($entry instanceof JSONContainer, $entry->isContainer());
         }
     }
 }
