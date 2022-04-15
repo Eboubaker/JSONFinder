@@ -56,15 +56,15 @@ you can encode php values into json string without ext-json.
 use Eboubaker\JSON\JSONObject;
 
 $phpvalue = [
-            "a" => "b",
-            "e" => [
-                "f" => null,
-                "h" => [
-                    "i" => "j",
-                    "k" => [1, 2, 3e-13, ["x": 0.3]]
-                ]
-            ]
-        ];
+    "a" => "b",
+    "e" => [
+        "f" => null,
+        "h" => [
+            "i" => "j",
+            "k" => [1, 2, 3e-13, ["x"=> 0.3]]
+        ]
+    ]
+];
 $obj = JSONObject::from($phpvalue);
 echo strval($obj);// '{"a":"b","e":{"f":null,"h":{"i":"j","k":[1,2,3.0E-13,{"x":0.3}]}}}'
 ```
@@ -93,25 +93,25 @@ $obj = JSONObject::from([
         "id" => "12345",
         "formats" => [
             [
-                "name": "mp4",
-                "url": "https://example.com/video720.mp4",
-                "resolution": "1280x720",
+                "name" => "mp4",
+                "url" => "https://example.com/video720.mp4",
+                "resolution" => "1280x720",
             ],
             [
-                "name": "mp4",
-                "url": "https://example.com/video1080.mp4",
-                "resolution": "1920x1080",
+                "name" => "mp4",
+                "url" => "https://example.com/video1080.mp4",
+                "resolution" => "1920x1080",
             ],
             [
-                "name": "webm",
-                "url": "https://example.com/video720.webm",
-                "resolution": "1280x720",
+                "name" => "webm",
+                "url" => "https://example.com/video720.webm",
+                "resolution" => "1280x720",
             ],
         ]
     ]
 ]);
 
-echo $obj->getAll('formats'); // empty array [], $obj does not contain 'formats' path
+$obj->getAll('formats'); // empty array [], $obj does not contain 'formats' path
 
 $result = $obj->getAll('meta.id'); // [0 => JSONValue("12345")]
 $video_id = $result[0];
@@ -123,7 +123,7 @@ $has_id = $obj->getAll('**.id');
 $all_formats = $obj->getAll('video.formats.*');
 
 // you can apply a filter to the results
-$mp4_formats = $obj->getAll('video.formats.*', fn($v) => $v->getAll('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
+$mp4_formats = $obj->getAll('video.formats.*', fn($v) => $v->get('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
 
 
 // return paths of found results as the keys in the result array
@@ -158,7 +158,7 @@ $object = JSONObject::from([
                     [
                         "id" => "1134",
                         "likes" => 2,
-                        "replies" : [],
+                        "replies" => [],
                         "content" => "thanks for sharing",
                     ],
                     [
@@ -185,27 +185,27 @@ $object = JSONObject::from([
 ]);
 
 // get first object which matches these paths and filters.
-$comment_with_likes = $object->find([
+$comment_with_likes = $object->search([
     "content",
     "likes" => fn(JSONEntry $v) => $v->value() > 0
 ]);
 echo $comment_with_likes;// {"id":"1134","likes":2,"replies":[],"content":"thanks for sharing"}
 
 
-$post_with_comment_replies = $object->find([
+$post_with_comment_replies = $object->search([
     "comments.*.replies"
 ]);
 echo $post_with_comment_replies['id'];// "1234"
 
 
 // more than 0 replies
-$comment_with_replies = $object->find([
+$comment_with_replies = $object->search([
     "replies.*"
 ]);
 echo $comment_with_replies['id'];// "1334"
 
 
-$comment_with_bad_words = $object->find([
+$comment_with_bad_words = $object->search([
     "content" => fn(JSONEntry $v) => $v->matches('/worst|bad/')
 ]);
 
@@ -219,9 +219,11 @@ for example if you want to also include javascript objects in the resutls you ca
 match javascript object-keys or javascript strings that are quoted with single quote `'`
 
 ```php
+use Eboubaker\JSON\JSONFinder;
+
 $finder = JSONFinder::make(JSONFinder::T_ALL_JSON | JSONFinder::T_JS);
-$finder->findEntries("{mykey: 1}");// [JSONObject({"mykey":1})]
-$finder->findEntries("{'stringkey': 'stringvalue'}");// [JSONObject({"stringkey":"stringvalue"})]
+$finder->findEntries("{jskey: 1}");// [JSONObject({"jskey":1})]
+$finder->findEntries("{'jskey': 'jsstring'}");// [JSONObject({"jskey":"jsstring"})]
 ```
 
 All other functions are self documented with PHPDoc.
