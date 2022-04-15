@@ -337,58 +337,45 @@ class JSONFinder
         if ($raw[$from] !== "+" && $raw[$from] !== "-" && !is_numeric($raw[$from])) {
             return null;
         }
-        $foundESign = $foundNumberSign = $foundDot = $foundE = false;
+        $foundESign = $foundDot = $foundE = false;
         $number = '';
         $i = $from;
         $numberLength = 0;
         while ($i < $len) {
             $char = $raw[$i];
             if ($char === '.') {
-                if ($numberLength === 0) {
-                    // json standard does not allow a number to start with a dot
-                    return null;
-                }
                 if ($foundDot) {
                     // invalid: two dots in a number
-                    return null;
+                    break;
                 }
                 if ($foundE) {
                     // dot cannot be after an 'E'
-                    return null;
+                    break;
                 }
                 $foundDot = true;
             } else if ($char === 'e' || $char === 'E') {
-                if ($numberLength === 0) {
-                    // e cannot be the first character
-                    return null;
-                }
                 if ($number[$numberLength - 1] === '.') {
                     // e cannot be directly after a dot
-                    return null;
+                    break;
                 }
                 if ($foundE) {
                     // invalid number (two e's found)
-                    return null;
+                    break;
                 }
                 $foundE = true;
             } else if ($char === '+' || $char === '-') {
                 if ($foundE) {
                     if ($foundESign) {
                         // invalid number (two e's signs found)
-                        return null;
+                        break;
                     } else {
                         $foundESign = true;
                     }
                 } else {
                     if ($numberLength !== 0) {
                         // sign can only be the first character
-                        return null;
+                        break;
                     }
-                    if ($foundNumberSign) {
-                        // invalid number (two signs found)
-                        return null;
-                    }
-                    $foundNumberSign = true;
                 }
             } else if (!is_numeric($char)) {
                 // end of number
@@ -398,14 +385,14 @@ class JSONFinder
             $numberLength++;
             $i++;
         }
-        if ($numberLength === 0) {
-            // should not happen, but just in case something went wrong above,
-            // or if for some reason $i was at the end of the string
-            return null;
-        }
-        $lastChar = $number[$numberLength - 1];
+
+        $lastChar = $number[$numberLength - 1] ?? '';
         if ($lastChar === 'e' || $lastChar === 'E' || $lastChar === '.' || $lastChar === '+' || $lastChar === '-') {
             // unexpected end of number
+            $number = substr($number, 0, -1);
+            $numberLength--;
+        }
+        if ($numberLength === 0) {
             return null;
         }
         return new JTokenStruct(new JSONValue($foundDot ? floatval($number) : intval($number)), $i - $from);
