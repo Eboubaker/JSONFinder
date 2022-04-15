@@ -135,10 +135,10 @@ class JSONFinder
     private function isAllowedEntry(JSONEntry $entry): bool
     {
         if ($entry instanceof JSONValue) {
-            return is_string($entry->value) && $this->allowedTypes & JSONFinder::T_STRING
-                || (is_numeric($entry->value) && !is_string($entry->value)) && $this->allowedTypes & JSONFinder::T_NUMBER
-                || is_bool($entry->value) && $this->allowedTypes & JSONFinder::T_BOOL
-                || is_null($entry->value) && $this->allowedTypes & JSONFinder::T_NULL;
+            return is_string($entry->value()) && $this->allowedTypes & JSONFinder::T_STRING
+                || (is_numeric($entry->value()) && !is_string($entry->value())) && $this->allowedTypes & JSONFinder::T_NUMBER
+                || is_bool($entry->value()) && $this->allowedTypes & JSONFinder::T_BOOL
+                || is_null($entry->value()) && $this->allowedTypes & JSONFinder::T_NULL;
         } else {
             if ($entry instanceof JSONObject) {
                 if ($this->allowedTypes & JSONFinder::T_OBJECT && $entry->count() > 0) {
