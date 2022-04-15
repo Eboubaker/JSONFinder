@@ -63,7 +63,7 @@ class JSONArray extends JSONContainer
     /**
      * @inheritDoc
      */
-    public function toReadableString(int $indent): string
+    public function toReadableString(int $indent = 2): string
     {
         return $this->__toReadableString($indent, $indent);
     }
