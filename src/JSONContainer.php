@@ -539,9 +539,10 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * @param $other JSONContainer|mixed the other array or object to compare with
      * @return bool returns true if all keys and values are the same with $other, otherwise false.
      */
-    public function equals($other, $strict = true): bool
+    public function equals($other, bool $strict = true): bool
     {
         if (!($other instanceof JSONContainer)) return false;
+        if (count($this) !== count($other)) return false;
         foreach ($this->entries as $key => $entry) {
             if (!$other->offsetExists($key)) return false;
             if ($entry instanceof JSONContainer) {
@@ -550,7 +551,9 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                 }
             } else {// should be and must be a JSONValue
                 /** @var $entry JSONValue */
-                $entry->equals($other[$key], $strict);
+                if (!$entry->equals($other[$key], $strict)) {
+                    return false;
+                }
             }
         }
         return true;// empty or everything is equal
