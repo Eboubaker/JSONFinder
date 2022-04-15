@@ -206,13 +206,13 @@ class JSONFinder
     /**
      * @see https://en.wikipedia.org/wiki/UTF-8#Encoding
      */
-    private function unicode_to_utf8($co)
+    private function unicode_to_utf8(int $co): string
     {
         if ($co <= 0x7F) return chr($co);
         if ($co <= 0x7FF) return chr(($co >> 6) + 192) . chr(($co & 63) + 128);
         if ($co <= 0xFFFF) return chr(($co >> 12) + 224) . chr((($co >> 6) & 63) + 128) . chr(($co & 63) + 128);
         if ($co <= 0x1FFFFF) return chr(($co >> 18) + 240) . chr((($co >> 12) & 63) + 128) . chr((($co >> 6) & 63) + 128) . chr(($co & 63) + 128);
-        return '';
+        throw new InvalidArgumentException("codepoint out of range for utf-8");
     }
 
     /**
