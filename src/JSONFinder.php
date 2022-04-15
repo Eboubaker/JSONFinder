@@ -204,16 +204,24 @@ class JSONFinder
     }
 
     /**
-     * code-point to utf8 string
      * @see https://en.wikipedia.org/wiki/UTF-8#Encoding
      */
-    private function cptoUTF8($cp)
+    private function unicode_to_utf8($co)
     {
-        if ($cp <= 0x7F) return chr($cp);
-        if ($cp <= 0x7FF) return chr(($cp >> 6) + 192) . chr(($cp & 63) + 128);
-        if ($cp <= 0xFFFF) return chr(($cp >> 12) + 224) . chr((($cp >> 6) & 63) + 128) . chr(($cp & 63) + 128);
-        if ($cp <= 0x1FFFFF) return chr(($cp >> 18) + 240) . chr((($cp >> 12) & 63) + 128) . chr((($cp >> 6) & 63) + 128) . chr(($cp & 63) + 128);
+        if ($co <= 0x7F) return chr($co);
+        if ($co <= 0x7FF) return chr(($co >> 6) + 192) . chr(($co & 63) + 128);
+        if ($co <= 0xFFFF) return chr(($co >> 12) + 224) . chr((($co >> 6) & 63) + 128) . chr(($co & 63) + 128);
+        if ($co <= 0x1FFFFF) return chr(($co >> 18) + 240) . chr((($co >> 12) & 63) + 128) . chr((($co >> 6) & 63) + 128) . chr(($co & 63) + 128);
         return '';
+    }
+
+    /**
+     * make a utf-16 string from two unicode surrogates
+     * @see https://en.wikipedia.org/wiki/UTF-16#Examples
+     */
+    private function surrogate_to_utf16(int $high, int $low)
+    {
+        return $this->unicode_to_utf8(($high - 0xD800) * 0x400 + ($low - 0xDC00) + 0x10000);
     }
 
     /**
@@ -226,6 +234,7 @@ class JSONFinder
         }
         $i = 1 + $from;
         $chars = '';
+        $last_unicode = null;
         while ($i < $len) {
             if ($raw[$i] === $quote) {
                 return new JTokenStruct(new JSONValue($chars), ($i - $from) + 1);
@@ -240,7 +249,25 @@ class JSONFinder
                         return null;
                     }
                     // convert codepoint to utf8
-                    $chars .= $this->cptoUTF8(hexdec($hex));
+                    $unicode = hexdec($hex);
+                    $utf8 = $this->unicode_to_utf8($unicode);
+                    if ($last_unicode && $last_unicode >= 0xD800 && $last_unicode <= 0xDBFF && $unicode >= 0xDC00 && $unicode <= 0xDFFF) {
+                        // surrogate pair
+                        $utf8 = $this->surrogate_to_utf16($last_unicode, hexdec($hex));
+                        if ($last_unicode <= 0x7F) {
+                            $chars = substr($chars, 0, -1);
+                        } else if ($last_unicode <= 0x7FF) {
+                            $chars = substr($chars, 0, -2);
+                        } else if ($last_unicode <= 0xFFFF) {
+                            $chars = substr($chars, 0, -3);
+                        } else if ($last_unicode <= 0x1FFFFF) {
+                            $chars = substr($chars, 0, -4);
+                        }
+                        $last_unicode = null;
+                    } else {
+                        $last_unicode = hexdec($hex);
+                    }
+                    $chars .= $utf8;
                     $i += 5;
                 } //@formatter:off
                 else if($code === '\\'){ $chars .= "\\";$i++; }
@@ -258,6 +285,7 @@ class JSONFinder
                     return null;
                 }
             } else {
+                $last_unicode = null;
                 $chars .= $raw[$i];
                 $i++;
             }
