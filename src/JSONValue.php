@@ -16,7 +16,7 @@ class JSONValue implements JSONEntry
      * the value that this entry holds
      * @var bool|float|int|string|null|JSONStringable
      */
-    public $value;
+    private $value;
 
     private static JSONFinder $valueFinder;
 
@@ -26,11 +26,7 @@ class JSONValue implements JSONEntry
      */
     public function __construct($value)
     {
-        if (self::allowedValue($value)) {
-            $this->value = $value;
-        } else {
-            throw new InvalidArgumentException("value must be a primitive type or implement JSONStringable, \"" . Utils::typeof($value) . "\" given");
-        }
+        $this->set($value);
     }
 
     /**
@@ -39,7 +35,7 @@ class JSONValue implements JSONEntry
      */
     public static function allowedValue($value): bool
     {
-        return $value === null || is_int($value) || is_float($value) || is_string($value) || is_bool($value) || $value instanceof JSONStringable;
+        return is_string($value) || is_int($value) || is_float($value) || is_bool($value) || $value === null || $value instanceof JSONStringable;
     }
 
     public function isContainer(): bool
@@ -53,6 +49,19 @@ class JSONValue implements JSONEntry
     public function value()
     {
         return $this->value;
+    }
+
+    /**
+     * @param $value bool|float|int|string|null|JSONStringable
+     * @throws InvalidArgumentException if the value is not one of the allowed types
+     */
+    public function set($value)
+    {
+        if (self::allowedValue($value)) {
+            $this->value = $value;
+        } else {
+            throw new InvalidArgumentException("value must be a primitive type or implement JSONStringable, \"" . Utils::typeof($value) . "\" given");
+        }
     }
 
     public function __toString(): string
