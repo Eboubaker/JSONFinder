@@ -292,10 +292,11 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * if the path ends with a "<b><code>**</code></b>" wildcard, the result will be all nested {@link JSONValue}s of the preceding path segments.<br>
      * if the path ends with a "<b><code>*</code></b>" wildcard, the result will be all entries of the preceding path segments.
      * @param string $path the path to search for
+     * @param bool $paths_as_keys if true, the result will be an associative array of paths as keys and {@link JSONValue}s as values.
      * @param Closure|null $filter optional filter function to filter the results, it will be called with the found {@link JSONValue} as the first parameter and should return a boolean value to indicate if the entry should be included in the result or not
-     * @return array<string,JSONEntry>|false returns array of found entries or false if arguments are invalid
+     * @return array<string,JSONEntry>|false returns array of found entries or false if path syntax is invalid (contains ".." or <code>"**.*"</code>)
      */
-    public function getAll(string $path, Closure $filter = null)
+    public function getAll(string $path, Closure $filter = null, bool $paths_as_keys = false)
     {
         if (!$path
             || strpos($path, '..') !== false
@@ -304,7 +305,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
         $segments = explode('.', $path);
         if (empty($segments)) return false;
-        return $this->internal_getAll(explode('.', $path), $filter);
+        return $this->internal_getAll(explode('.', $path), $filter, $paths_as_keys);
     }
 
     /**
@@ -366,7 +367,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     /**
      * gets results of a single path
      */
-    private function internal_getAll(array $segments, ?Closure $filter): array
+    private function internal_getAll(array $segments, ?Closure $filter, bool $paths_as_keys): array
     {
         $result = [];
         $segment = $segments[0];
@@ -377,19 +378,31 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                 // add all nested values
                 foreach ($this->values() as $key => $value) {
                     if ($filter != null && !$filter($value)) continue;// value did not pass the filter, skip it...
-                    $result[$key] = $value;
+                    if ($paths_as_keys) {
+                        $result[$key] = $value;
+                    } else {
+                        $result[] = $value;
+                    }
                 }
             } else {
                 // add all values found by containers that contains the next segments
                 foreach ($this->containersIterator() as $entryKey => $entry) {
-                    foreach ($entry->internal_getAll($segments, $filter) as $key => $resultEntry) {
-                        $result[$entryKey . '.' . $key] = $resultEntry;
+                    foreach ($entry->internal_getAll($segments, $filter, $paths_as_keys) as $key => $resultEntry) {
+                        if ($paths_as_keys) {
+                            $result[$entryKey . '.' . $key] = $resultEntry;
+                        } else {
+                            $result[] = $resultEntry;
+                        }
                     }
                 }
                 // add all values found by other deep containers that contains the next segments
                 foreach ($this->containersIterator() as $entryKey => $entry) {
-                    foreach ($entry->internal_getAll(['**', ...$segments], $filter) as $key => $resultEntry) {
-                        $result[$entryKey . '.' . $key] = $resultEntry;
+                    foreach ($entry->internal_getAll(['**', ...$segments], $filter, $paths_as_keys) as $key => $resultEntry) {
+                        if ($paths_as_keys) {
+                            $result[$entryKey . '.' . $key] = $resultEntry;
+                        } else {
+                            $result[] = $resultEntry;
+                        }
                     }
                 }
             }
@@ -398,13 +411,21 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                 // last segment, add all entries
                 foreach ($this->entries as $key => $value) {
                     if ($filter != null && !$filter($value)) continue;// value did not pass the filter, skip it...
-                    $result[$key] = $value;
+                    if ($paths_as_keys) {
+                        $result[$key] = $value;
+                    } else {
+                        $result[] = $value;
+                    }
                 }
             } else {
                 // not last segment, add all values found by containers that contains the next segments
                 foreach ($this->containersIterator() as $entryKey => $entry) {
-                    foreach ($entry->internal_getAll($segments, $filter) as $key => $resultEntry) {
-                        $result[$entryKey . '.' . $key] = $resultEntry;
+                    foreach ($entry->internal_getAll($segments, $filter, $paths_as_keys) as $key => $resultEntry) {
+                        if ($paths_as_keys) {
+                            $result[$entryKey . '.' . $key] = $resultEntry;
+                        } else {
+                            $result[] = $resultEntry;
+                        }
                     }
                 }
             }
@@ -417,13 +438,21 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                     // last segment, add it if it passes the filter.
                     if ($filter == null || $filter($entry)) {
                         // filter was null or value did not pass the filter.
-                        $result[$segment] = $entry;
+                        if ($paths_as_keys) {
+                            $result[$segment] = $entry;
+                        } else {
+                            $result[] = $entry;
+                        }
                     }
                 } else {
                     // not the last segment, pass the next segments to the entry if it is container and add the results
                     if ($entry instanceof JSONContainer) {
-                        foreach ($entry->internal_getAll($segments, $filter) as $key => $resultEntry) {
-                            $result[$segment . '.' . $key] = $resultEntry;
+                        foreach ($entry->internal_getAll($segments, $filter, $paths_as_keys) as $key => $resultEntry) {
+                            if ($paths_as_keys) {
+                                $result[$segment . '.' . $key] = $resultEntry;
+                            } else {
+                                $result[] = $resultEntry;
+                            }
                         }
                     }
                 }

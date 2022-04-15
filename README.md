@@ -112,10 +112,10 @@ $obj = JSONObject::from([
 
 echo $obj->getAll('formats'); // empty array [], $obj does not contain 'formats' path
 
-$result = $obj->getAll('meta.id'); // ['meta.id' => JSONValue("12345")]
-$video_id = array_values($result)[0];
+$result = $obj->getAll('meta.id'); // [0 => JSONValue("12345")]
+$video_id = $result[0];
 
-// get all deep entries that contains a 'name' key
+// get all deep entries that contains an 'id' key
 $has_id = $obj->getAll('**.id');
 
 // get all formats in 'video.formats' path
@@ -124,6 +124,9 @@ $all_formats = $obj->getAll('video.formats.*');
 // you can apply a filter to the results
 $mp4_formats = $obj->getAll('video.formats.*', fn($v) => $v->getAll('name')->equals('mp4')); // ['video.formats.0' => JSONObject({"name":"mp4","url":"https://example.com/video720.mp4","resolution":"1280x720"})]
 
+
+// return paths of found results as the keys in the result array
+$has_id = $obj->getAll('**.id', null, true); // ['meta.id' => JSONValue("12345"), 'video.id' => JSONValue("12345")]
 ```
 
 ### Find JSON object/array
