@@ -254,15 +254,8 @@ class JSONFinder
                     if ($last_unicode && $last_unicode >= 0xD800 && $last_unicode <= 0xDBFF && $unicode >= 0xDC00 && $unicode <= 0xDFFF) {
                         // surrogate pair
                         $utf8 = $this->surrogate_to_utf16($last_unicode, hexdec($hex));
-                        if ($last_unicode <= 0x7F) {
-                            $chars = substr($chars, 0, -1);
-                        } else if ($last_unicode <= 0x7FF) {
-                            $chars = substr($chars, 0, -2);
-                        } else if ($last_unicode <= 0xFFFF) {
-                            $chars = substr($chars, 0, -3);
-                        } else if ($last_unicode <= 0x1FFFFF) {
-                            $chars = substr($chars, 0, -4);
-                        }
+                        //  0xD800 <= 0xFFFF and 0xDBFF <= 0xFFFF so $last_unicode length must be 3
+                        $chars = substr($chars, 0, -3);
                         $last_unicode = null;
                     } else {
                         $last_unicode = hexdec($hex);
