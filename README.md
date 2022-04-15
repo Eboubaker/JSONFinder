@@ -71,12 +71,13 @@ echo strval($obj);// '{"a":"b","e":{"f":null,"h":{"i":"j","k":[1,2,3.0E-13,{"x":
 
 ### JSON Query
 
-you can search multiple for values inside the json entries. with dot notation path and wildcards "`*`" "`**`".
+you can search for values inside the json tree. with dot notation path and wildcards "`*`" "`**`".
 
 | Path              | Meaning     |
 | :---              | :----       |
-| `video.formats.*` | every entry inside `video.formats` (3 objects)       |
-| `video.**`        | Every deeply nested value inside `video` ("12345","mp4","https://<span></span>example.com/video720.mp4",..., "1280x720") (10 values)       |
+| `video.formats.*` | every entry inside `video.formats` (3 results)       |
+| `video.**`        | Every deeply nested value inside `video` ("12345","mp4","https://<span></span>example.com/video720.mp4",..., "1280x720") (10 results)       |
+| `video.**.url`        | Every deeply nested value inside `video` with key `url` ("https://<span></span>example.com/video720.mp4",...) (3 results)       |
 
 ------------------------------------------
 
