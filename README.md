@@ -13,7 +13,7 @@ composer require eboubaker/json-finder
 ```
 
 ## Quick Start
-suppose you want to extract all json from an http response (from &lt;script&gt; tags).
+suppose you want to scrap all json from an http response (from &lt;script&gt; tags).
 ```php
 use Eboubaker\JSON\JSONFinder;
 
