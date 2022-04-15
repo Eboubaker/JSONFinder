@@ -25,7 +25,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
 
 
     /**
-     * wrap the value in a json entry. empty arrays or objects will be wrapped in an empty JSONArray
+     * wrap the value in a json entry.
      * @param $value mixed
      * @return JSONEntry the wrapped value as JSONEntry
      * @see JSONArray
@@ -262,18 +262,21 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     /**
      * true if a value found that matches the path. accepts wildcards <code>*</code> and <code>**</code>.
      * @param string $path path to the value.
+     * @return bool true if the path exists or false if the path was not found or the path has invalid syntax (contains ".." or <code>"**.*"</code>)
      */
     public function has(string $path): bool
     {
+        // get() will return null if the path is not found.
         return null !== $this->get($path);
     }
 
     /**
-     * find first value that matches the dot notation path. accepts wildcards <code>*</code> and <code>**</code>.<br>
+     * find first JSONEntry that matches the dot notation path. accepts wildcards <code>*</code> and <code>**</code>.<br>
      * @param string $path path to the value.
      * @param $default mixed|callable default value to return if no result was found, can be a callback.
+     * @return mixed|null returns the found JSONEntry or default value if not found or if path has invalid syntax (contains ".." or <code>"**.*"</code>).
      */
-    public function get(string $path, $default = null): ?JSONEntry
+    public function get(string $path, $default = null)
     {
         if (!$path
             || strpos($path, '..') !== false
