@@ -65,7 +65,7 @@ $phpvalue = [
                 ]
             ]
         ];
-$obj = new JSONObject($phpvalue);
+$obj = JSONObject::from($phpvalue);
 echo strval($obj);// '{"a":"b","e":{"f":null,"h":{"i":"j","k":[1,2,3.0E-13,{"x":0.3}]}}}'
 ```
 
@@ -83,7 +83,7 @@ you can search multiple for values inside the json entries. with dot notation pa
 ```php
 use Eboubaker\JSON\JSONObject;
 
-$obj = new JSONObject([
+$obj = JSONObject::from([
     "meta" => [
         "id" => "12345",
         "title" => "My Title",
@@ -137,7 +137,7 @@ will returns the target that contains all the provided paths.
 use Eboubaker\JSON\JSONObject;
 use Eboubaker\JSON\Contracts\JSONEntry;
 
-$object = new JSONObject([
+$object = JSONObject::from([
     "response" => [
         "hash" => "a5339be0849ced1ffe",
         "posts" => [

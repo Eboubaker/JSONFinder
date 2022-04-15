@@ -13,6 +13,7 @@ use Eboubaker\JSON\JSONObject;
 use Eboubaker\JSON\JSONValue;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use ReflectionObject;
 
 
 final class UnitTest extends TestCase
@@ -179,7 +180,7 @@ final class UnitTest extends TestCase
             },
             "z" => "600"
         ];
-        $this->assertEquals('{"key":["iam","custom"],"z":"600"}', strval(new JSONObject($obj)));
+        $this->assertEquals('{"key":["iam","custom"],"z":"600"}', strval(JSONObject::from($obj)));
     }
 
     /**
@@ -221,7 +222,7 @@ final class UnitTest extends TestCase
 
     public function testCanQueryValues(): void
     {
-        $obj = new JSONObject([
+        $obj = JSONObject::from([
             'a' => 'b',
             'c' => 'd',
             "e" => [
@@ -273,14 +274,14 @@ final class UnitTest extends TestCase
         $val = new JSONValue("a very small text?");
         $this->assertTrue($val->matches("/text\\?$/"));
         $this->assertFalse($val->matches("/^text\\?/"));
-        $obj = new JSONObject(["a" => "b"]);
+        $obj = JSONObject::from(["a" => "b"]);
         $this->assertFalse($obj->matches("/b/"));
     }
 
 
     public function testCanFindValues(): void
     {
-        $obj = new JSONObject([
+        $obj = JSONObject::from([
             'a' => 'b',
             'c' => 'd',
             "e" => [
@@ -329,7 +330,7 @@ final class UnitTest extends TestCase
             '*.q.**.x' => fn(JSONEntry $v) => $v->matches("/y/")
         ])['extra']['r']->value());
 
-        $object = new JSONObject([
+        $object = JSONObject::from([
             "response" => [
                 "hash" => "a5339be0849ced1ffe",
                 "posts" => [
@@ -456,17 +457,18 @@ final class UnitTest extends TestCase
             });
         }));
         $this->assertTrue($throws(function () {
-            new JSONArray(["foo" => 1]);
-        }));
-        $this->assertTrue($throws(function () {
-            new JSONArray("wadadada");
+            JSONArray::from(["foo" => 1]);
         }));
         $this->assertTrue($throws(function () {
             /** @noinspection PhpParamsInspection */
-            new JSONObject("wadadada");
+            JSONArray::from("wadadada");
         }));
         $this->assertTrue($throws(function () {
-            new JSONObject(new \ReflectionObject((object)[]));
+            /** @noinspection PhpParamsInspection */
+            JSONObject::from("wadadada");
+        }));
+        $this->assertTrue($throws(function () {
+            new JSONObject(new ReflectionObject((object)[]));
         }));
     }
 
@@ -489,28 +491,28 @@ final class UnitTest extends TestCase
             yield "foobar" => "bar";
         };
         $arr = new JSONArray();
-        $arr[] = $gen();
+        $arr[] = JSONArray::from($gen());
         $this->assertEquals("foo", $arr->get('0.0')->value());
 
         $this->assertTrue($throws(function () use ($gen) {
             $arr = new JSONArray();
-            $arr["xyz"] = $gen();
+            $arr["xyz"] = JSONArray::from($gen());
         }));
 
         $obj = new JSONObject();
-        $obj[] = $gen();
+        $obj[] = JSONArray::from($gen());
         $this->assertEquals("foo", $obj->get('0.0')->value());
 
 
         $obj = new JSONObject();
-        $obj["x"] = $genKeys();
+        $obj["x"] = JSONObject::from($genKeys());
         $this->assertEquals("bar", $obj->get('x.foobar')->value());
     }
 
     public function testCanUnsetWithArraySyntax()
     {
         $array = new JSONArray();
-        $array[] = (object)["x" => "var"];
+        $array[] = JSONObject::from(["x" => "var"]);
         $this->assertCount(1, $array);
         unset($array[0]);
         $this->assertTrue($array->isEmpty());
