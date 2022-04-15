@@ -20,4 +20,12 @@ final class Utils
         }
         return false;
     }
+
+    static function typeof($value): string
+    {
+        if (is_object($value)) {
+            return get_class($value);
+        }
+        return gettype($value);
+    }
 }

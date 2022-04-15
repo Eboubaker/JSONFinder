@@ -21,15 +21,34 @@ class JSONArray extends JSONContainer
     public function __construct($entries = [])
     {
         if (!is_iterable($entries) && !is_object($entries)) {
-            throw new InvalidArgumentException('The entries must be iterable');
+            throw new InvalidArgumentException('The entries must be array or iterable, ' . Utils::typeof($entries) . ' given');
         }
         $this->entries = [];
         foreach ($entries as $key => $entry) {
-            if (!is_int($key)) {
-                throw new InvalidArgumentException("array keys must be integers, " . gettype($key) . " given");
+            if (!($entry instanceof JSONEntry)) {
+                throw new InvalidArgumentException("JSONArray constructor only allows JSONEntries, " . Utils::typeof($entry) . " given, use JSONArray::from() instead.");
             }
-            $this->addEntry($entry, $key);
+            $this->offsetSet($key, $entry);
         }
+    }
+
+    /**
+     * make a JSONArray from $iterable values, will wrap values that are not JSONEntries.
+     * @param $iterable array|iterable|object
+     * @return static
+     * @see JSONObject
+     * @see JSONEntry
+     */
+    public static function from($iterable): self
+    {
+        if (!is_iterable($iterable) && !is_object($iterable)) {
+            throw new InvalidArgumentException('JSONArray::from(): expected parameter 1 to be iterable but got ' . Utils::typeof($iterable));
+        }
+        $instance = new static();
+        foreach ($iterable as $key => $value) {
+            $instance->offsetSet($key, JSONContainer::toEntry($value));
+        }
+        return $instance;
     }
 
     /**
@@ -86,16 +105,15 @@ class JSONArray extends JSONContainer
     public function offsetSet($offset, $value)
     {
         if (!is_integer($offset) && !is_null($offset)) {
-            throw new InvalidArgumentException("array keys must be integers, " . gettype($offset) . " given");
+            throw new InvalidArgumentException("JSONArray keys must be integers, " . Utils::typeof($offset) . " given");
         }
-        /** @noinspection DuplicatedCode */
-        if ($value instanceof JSONEntry) {
-            parent::offsetSet($offset, $value);
-        } else if (is_iterable($value) || is_object($value)) {
-            parent::offsetSet($offset, $this->iterable_to_container($value));
-        } else {
-            parent::offsetSet($offset, new JSONValue($value));
+        if (!($value instanceof JSONEntry)) {
+            if (!JSONValue::allowedValue($value)) {
+                throw new InvalidArgumentException("JSONArray only accepts primitive types and JSONEntry or JSONStringable objects, " . Utils::typeof($value) . " given");
+            }
+            $value = new JSONValue($value);
         }
+        parent::offsetSet($offset, $value);
     }
 
     public function unserialize($data)

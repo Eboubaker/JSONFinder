@@ -24,11 +24,30 @@ class JSONObject extends JSONContainer
         }
         $this->entries = [];
         foreach ($entries as $key => $entry) {
-            if (!is_string($key) && !is_integer($key)) {// just in case
-                throw new InvalidArgumentException("object keys must be strings or integers, " . gettype($key) . "given");
+            if (!($entry instanceof JSONEntry)) {
+                throw new InvalidArgumentException("JSONObject constructor only allows JSONEntries, " . Utils::typeof($entry) . " given, use JSONObject::from() instead.");
             }
-            $this->addEntry($entry, $key);
+            $this->offsetSet($key, $entry);
         }
+    }
+
+    /**
+     * make a JSONObject from $iterable values, will wrap values that are not JSONEntries.
+     * @param $iterable array|iterable|object
+     * @return static
+     * @see JSONObject
+     * @see JSONEntry
+     */
+    public static function from($iterable): self
+    {
+        if (!is_iterable($iterable) && !is_object($iterable)) {
+            throw new InvalidArgumentException('JSONObject::from(): expected parameter 1 to be iterable but got ' . Utils::typeof($iterable));
+        }
+        $instance = new static();
+        foreach ($iterable as $key => $value) {
+            $instance->offsetSet($key, JSONContainer::toEntry($value));
+        }
+        return $instance;
     }
 
     /**
@@ -90,16 +109,15 @@ class JSONObject extends JSONContainer
     public function offsetSet($offset, $value)
     {
         if (!is_string($offset) && !is_integer($offset) && !is_null($offset)) {
-            throw new InvalidArgumentException("object keys must be strings or integers, " . gettype($offset) . "given");
+            throw new InvalidArgumentException("JSONObject keys must be strings or integers, " . Utils::typeof($offset) . "given");
         }
-        /** @noinspection DuplicatedCode */
-        if ($value instanceof JSONEntry) {
-            parent::offsetSet($offset, $value);
-        } else if (is_iterable($value) || is_object($value)) {
-            parent::offsetSet($offset, $this->iterable_to_container($value));
-        } else {
-            parent::offsetSet($offset, new JSONValue($value));
+        if (!($value instanceof JSONEntry)) {
+            if (!JSONValue::allowedValue($value)) {
+                throw new InvalidArgumentException("JSONObject only accepts primitive types and JSONEntry or JSONStringable objects, " . Utils::typeof($value) . " given");
+            }
+            $value = new JSONValue($value);
         }
+        parent::offsetSet($offset, $value);
     }
 
     public function unserialize($data)

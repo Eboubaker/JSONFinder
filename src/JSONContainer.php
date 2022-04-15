@@ -9,7 +9,6 @@ use Countable;
 use Eboubaker\JSON\Contracts\JSONEntry;
 use Eboubaker\JSON\Contracts\JSONStringable;
 use Generator;
-use InvalidArgumentException;
 use IteratorAggregate;
 use RecursiveArrayIterator;
 
@@ -26,20 +25,22 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
 
 
     /**
-     * @param $entry mixed|JSONEntry
-     * @param $key int|string
-     * @throws InvalidArgumentException if entry is not allowed.
+     * wrap the value in a json entry. empty arrays or objects will be wrapped in an empty JSONArray
+     * @param $value mixed
+     * @return JSONEntry the wrapped value as JSONEntry
+     * @see JSONArray
+     * @see JSONEntry
      */
-    protected function addEntry($entry, $key)
+    public static function toEntry($value): JSONEntry
     {
-        if (!($entry instanceof JSONEntry)) {
-            if ((is_iterable($entry) || is_object($entry)) && !($entry instanceof JSONStringable)) {
-                $this->entries[$key] = $this->iterable_to_container($entry);
+        if (!($value instanceof JSONEntry)) {
+            if ((is_iterable($value) || is_object($value)) && !($value instanceof JSONStringable)) {
+                return self::iterable_to_container($value);
             } else {
-                $this->entries[$key] = new JSONValue($entry);
+                return new JSONValue($value);
             }
         } else {
-            $this->entries[$key] = $entry;
+            return $value;
         }
     }
 
@@ -47,11 +48,12 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * @param $value iterable|object|array
      * @return JSONContainer
      */
-    protected function iterable_to_container($value): JSONContainer
+    private static function iterable_to_container($value): JSONContainer
     {
         $list = [];
         $has_string_key = false;
         foreach ($value as $key => $entry) {
+            $list[$key] = $entry;
             if (!$has_string_key && is_string($key)) {
                 $has_string_key = true;
                 if ($value instanceof \ArrayAccess || is_array($value)) {
@@ -61,13 +63,21 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
                     $list = get_object_vars($value);
                     break;
                 }
+                // it is an iterator... continue pulling values from the iterator
             }
-            $list[$key] = $entry;
         }
-        if ($has_string_key) {
-            return new JSONObject($list);
+        if (empty($list)) {
+            if (is_array($value)) {
+                return new JSONArray();
+            } else {
+                return new JSONObject();
+            }
         } else {
-            return new JSONArray($list);
+            if ($has_string_key) {
+                return JSONObject::from($list);
+            } else {
+                return JSONArray::from($list);
+            }
         }
     }
 

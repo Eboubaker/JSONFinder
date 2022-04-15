@@ -26,11 +26,20 @@ class JSONValue implements JSONEntry
      */
     public function __construct($value)
     {
-        if ($value === null || is_int($value) || is_float($value) || is_string($value) || is_bool($value) || $value instanceof JSONStringable) {
+        if (self::allowedValue($value)) {
             $this->value = $value;
         } else {
-            throw new InvalidArgumentException("value must be a primitive type or implement JSONStringable, \"" . gettype($value) . "\" given");
+            throw new InvalidArgumentException("value must be a primitive type or implement JSONStringable, \"" . Utils::typeof($value) . "\" given");
         }
+    }
+
+    /**
+     * @param $value
+     * @return bool returns true if JSONValue constructor can be called with this value
+     */
+    public static function allowedValue($value): bool
+    {
+        return $value === null || is_int($value) || is_float($value) || is_string($value) || is_bool($value) || $value instanceof JSONStringable;
     }
 
     public function isContainer(): bool
@@ -81,7 +90,7 @@ class JSONValue implements JSONEntry
         } else if ($this->value instanceof JSONStringable) {
             return $this->value->toJSONString();
         } else {
-            throw new InvalidArgumentException("json serialization error: unexpected value type: \"" . gettype($this->value) . "\"");
+            throw new InvalidArgumentException("json serialization error: unexpected value type: \"" . Utils::typeof($this->value) . "\"");
         }
     }
 
