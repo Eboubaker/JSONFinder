@@ -71,17 +71,25 @@ class JSONFinder
     private const SINGLE_QUOTE = "'";
     private const DOUBLE_QUOTE = '"';
 
-    /** normal javascript reserved keywords */
+    /**
+     * normal javascript reserved keywords
+     * @see http://es5.github.io/x7.html#x7.6.1.1
+     */
     private const JS_KEYWORDS = array(
         // KEYWORDS
-        'break', 'case', 'catch', 'class', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'enum', 'export', 'extends', 'import', 'super',
+        'break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with',
+        // used as keywords in proposed extensions (TypeScript...etc)
+        'class', 'const', 'enum', 'export', 'extends', 'import', 'super',
         // BOOLEAN
         'true', 'false',
         // NULL
         'null'
     );
-    /** strict mode keywords */
-    private const JS_STRICT_KEYWORDS = array('implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield');
+    /**
+     * javascript "strict mode" reserved keywords
+     * @see http://es5.github.io/x7.html#x7.6.1.2
+     */
+    private const JS_STRICT_MODE_KEYWORDS = array('implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield');
 
     private function __construct(int $allowed_types)
     {
@@ -219,7 +227,7 @@ class JSONFinder
      * make a utf-16 string from two unicode surrogates
      * @see https://en.wikipedia.org/wiki/UTF-16#Examples
      */
-    private function surrogate_to_utf16(int $high, int $low)
+    private function surrogate_to_utf16(int $high, int $low): string
     {
         return $this->unicode_to_utf8(($high - 0xD800) * 0x400 + ($low - 0xDC00) + 0x10000);
     }
@@ -239,99 +247,49 @@ class JSONFinder
             if ($raw[$i] === $quote) {
                 return new JTokenStruct(new JSONValue($chars), ($i - $from) + 1);
             } else if ($raw[$i] === '\\' && $i + 1 < $len) {
+                $i++;// skip the backslash
                 // parse codepoint chars(\u...., \t, \n, \r, \f, \b, \/, \\, \")
-                $i++;
                 $code = $raw[$i];
                 if ($code === 'u') {
-                    $hex = substr($raw, $i + 1, 4);
-                    if (!ctype_xdigit($hex) || strpos($hex, '.0') !== false) {
+                    // a unicode codepoint
+                    $i++;// skip the 'u'
+                    $hex = substr($raw, $i, 4);
+                    if (!ctype_xdigit($hex) || strpos($hex, '.') !== false) {
                         // invalid hex char-code
                         return null;
                     }
                     // convert codepoint to utf8
-                    $unicode = hexdec($hex);
+                    $unicode = (int)hexdec($hex);
                     $utf8 = $this->unicode_to_utf8($unicode);
                     if ($last_unicode && $last_unicode >= 0xD800 && $last_unicode <= 0xDBFF && $unicode >= 0xDC00 && $unicode <= 0xDFFF) {
                         // surrogate pair
-                        $utf8 = $this->surrogate_to_utf16($last_unicode, hexdec($hex));
-                        //  0xD800 <= 0xFFFF and 0xDBFF <= 0xFFFF so $last_unicode length must be 3
+                        $utf8 = $this->surrogate_to_utf16($last_unicode, $unicode);
+                        //  the high surrogate is always between 0xD800 <= 0xFFFF and 0xDBFF <= 0xFFFF so $last_unicode length must be 3
                         $chars = substr($chars, 0, -3);
                         $last_unicode = null;
                     } else {
-                        $last_unicode = hexdec($hex);
+                        $last_unicode = $unicode;
                     }
                     $chars .= $utf8;
-                    $i += 5;
-                } //@formatter:off
-                else if($code === '\\'){ $chars .= "\\";$i++; }
-                else if($code === '/') { $chars .= "/" ;$i++; }
-                else if($code === 'n') { $chars .= "\n";$i++; }
-                else if($code === 'r') { $chars .= "\r";$i++; }
-                else if($code === 't') { $chars .= "\t";$i++; }
-                else if($code === '"') { $chars .= '"' ;$i++; }
-                else if($code === 'b') { $chars .= "\x8";$i++; }
-                else if($code === 'f') { $chars .= "\f";$i++; }
-                //@formatter:on
-                else {
-                    // invalid escaped char
-                    return null;
-                }
+                    $i += 3;// skip the first 3 codepoints
+                } else if ($code === '\\') $chars .= "\\";
+                else if ($code === '/') $chars .= "/";
+                else if ($code === 'n') $chars .= "\n";
+                else if ($code === 'r') $chars .= "\r";
+                else if ($code === 't') $chars .= "\t";
+                else if ($code === '"') $chars .= '"';
+                else if ($code === 'b') $chars .= "\x8";
+                else if ($code === 'f') $chars .= "\f";
+                else return null; // invalid escaped char
             } else {
                 $last_unicode = null;
                 $chars .= $raw[$i];
-                $i++;
             }
+            $i++;// skip the current char
         }
         return null;
     }
 
-    /**
-     * read through the string characters until an unclosing '"' is found, return string that is between the first non escaped '"' and the last non escaped '"'
-     * @param string $raw
-     * @param int $len
-     * @param int $from
-     * @return JTokenStruct|null
-     */
-    private function parseJSObjectKey(string $raw, int $len, int $from): ?JTokenStruct
-    {
-        $chars = '';
-        $i = $from;
-        while ($i < $len) {
-            // check if character is allowed in javascript variable declaration and add it to $chars if it is valid
-            if (ctype_alpha($raw[$i]) || (ctype_digit($raw[$i]) && $chars !== '') || $raw[$i] === '_' || $raw[$i] === '$') {
-                $chars .= $raw[$i];
-                $i++;
-            } else {
-                // we reached the ':' character, or we reached an invalid character
-                break;
-            }
-        }
-        // TODO: add strict mode as a flag?
-        /** @noinspection PhpRedundantOptionalArgumentInspection */
-        if ($chars !== '' && !$this->isJavaScriptKeyword($chars, false)) {
-            return new JTokenStruct(new JSONValue($chars), $i - $from);
-        } else {
-            // it was empty, or a javascript keyword.
-            return null;
-        }
-    }
-
-    /**
-     * returns true if str is a reserved javascript keyword
-     * the logic is from ECMAScript 5.1 spec: http://es5.github.io/x7.html#x7.6.1
-     */
-    private function isJavaScriptKeyword(string $str, bool $strict = false): bool
-    {
-        if (in_array($str, self::JS_KEYWORDS, true)) {
-            return true;
-        }
-        // strict mode reserved keywords
-        return $strict && in_array($str, self::JS_STRICT_KEYWORDS, true);
-    }
-
-    /**
-     * try parse a json number
-     */
     private function parseNumber(string $raw, int $len, int $from): ?JTokenStruct
     {
         if ($raw[$from] !== "+" && $raw[$from] !== "-" && !is_numeric($raw[$from])) {
@@ -388,7 +346,7 @@ class JSONFinder
 
         $lastChar = $number[$numberLength - 1] ?? '';
         if ($lastChar === 'e' || $lastChar === 'E' || $lastChar === '.' || $lastChar === '+' || $lastChar === '-') {
-            // unexpected end of number
+            // unexpected end of number, remove invalid character
             $number = substr($number, 0, -1);
             $numberLength--;
         }
@@ -450,6 +408,49 @@ class JSONFinder
         }
         // we reached end of string and the array was not closed with ']'
         return null;
+    }
+
+    /**
+     * @noinspection PhpSameParameterValueInspection
+     *
+     * @return bool returns true if $str is a reserved javascript keyword
+     * @see http://es5.github.io/x7.html#x7.6.1
+     */
+    private function isJavaScriptKeyword(string $str, bool $strict): bool
+    {
+        if (in_array($str, self::JS_KEYWORDS, true)) {
+            return true;
+        }
+        // strict mode reserved keywords
+        return $strict && in_array($str, self::JS_STRICT_MODE_KEYWORDS, true);
+    }
+
+    /**
+     * read through the string characters until an unclosing '"' is found,
+     * @return null|JTokenStruct returns the string token that
+     * is between the first non escaped '"' and the last non escaped '"'
+     */
+    private function parseJSObjectKey(string $raw, int $len, int $from): ?JTokenStruct
+    {
+        $chars = '';
+        $i = $from;
+        while ($i < $len) {
+            // check if character is allowed in javascript variable declaration and add it to $chars if it is valid
+            if (ctype_alpha($raw[$i]) || (ctype_digit($raw[$i]) && $chars !== '') || $raw[$i] === '_' || $raw[$i] === '$') {
+                $chars .= $raw[$i];
+                $i++;
+            } else {
+                // we reached the ':' character, or we reached an invalid character
+                break;
+            }
+        }
+        // TODO: add strict mode as a flag?
+        if ($chars !== '' && !$this->isJavaScriptKeyword($chars, false)) {
+            return new JTokenStruct(new JSONValue($chars), $i - $from);
+        } else {
+            // it was empty, or a javascript keyword.
+            return null;
+        }
     }
 
     private function parseObject(string $raw, int $len, int $from): ?JTokenStruct
@@ -515,20 +516,15 @@ class JSONFinder
                     }
                 }
                 if ($keyToken === null) {
-                    // key not found, hence this hole object is invalid.
+                    // expected key not found, hence this hole object is invalid.
                     return null;
                 }
                 $i = $this->skipWhitespaces($raw, $i + $keyToken->length, $len);
-                if ($i >= $len) {
-                    // reached end of string and object was not closed
-                    return null;
-                }
-                if ($raw[$i] !== ':') {
+                if ($i >= $len || $raw[$i] !== ':') {
                     // expected colon (key-value pair)
                     return null;
                 }
-                $i++;
-                $i = $this->skipWhitespaces($raw, $i, $len);
+                $i = $this->skipWhitespaces($raw, ++$i, $len);
                 if ($i >= $len) {
                     // reached end of string and object was not closed
                     return null;
@@ -538,7 +534,7 @@ class JSONFinder
                     // invalid value
                     return null;
                 }
-                $values[strval($keyToken->entry->value())] = $valueToken->entry;
+                $values[$keyToken->entry->value()] = $valueToken->entry;
                 $i += $valueToken->length;
                 $lastWasComma = false;
                 $lastWasEntry = true;
@@ -549,11 +545,11 @@ class JSONFinder
     }
 
     /**
-     * \#[Pure]
+     * increments $i until it reaches a non whitespace character
      * @param string $raw raw json string
      * @param $i int start from this index
      * @param $len int length of raw json string
-     * @return int new index where character is not a json whitespace
+     * @return int returns new index where character is not a json whitespace
      */
     private static function skipWhitespaces(string $raw, int $i, int $len): int
     {
