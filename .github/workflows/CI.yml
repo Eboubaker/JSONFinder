@@ -12,4 +12,10 @@ jobs:
       - uses: php-actions/composer@v5
       - name: run PHPUnit tests
         run: |
-          ./vendor/bin/phpunit --testdox
+          XDEBUG_MODE=coverage
+          ./vendor/bin/phpunit --testdox --coverage-clover clover.xml
+      - name: phpunit-coverage-badge
+        uses: timkrase/phpunit-coverage-badge@v1.2.0
+        with:
+          push_badge: true
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
