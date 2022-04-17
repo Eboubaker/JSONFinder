@@ -128,19 +128,19 @@ class JSONValue implements JSONEntry
      * check if this JSONValue's value is equal to the given value.
      * if <code>$value<code> is {@link JSONValue} then it's values will be compared
      *
-     * @param $value JSONValue|string|int|float|bool|null
+     * @param $other JSONValue|string|int|float|bool|null
      * @param $strict bool if true, the value must be strictly equal to the given value
      * @return bool true if the value is equal to the given value
      */
-    public function equals($value, bool $strict = false): bool
+    public function equals($other, bool $strict = false): bool
     {
-        if ($value instanceof JSONValue) {
-            $value = $value->value;
+        if ($other instanceof JSONValue) {
+            $other = $other->value;
         }
         if ($strict) {
-            return $this->value === $value;
+            return $this->value === $other;
         } else {
-            return $this->value == $value;
+            return $this->value == $other;
         }
     }
 

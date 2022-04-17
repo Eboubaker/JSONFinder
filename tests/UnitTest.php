@@ -104,6 +104,7 @@ final class UnitTest extends TestCase
             function __toString(): string { return '';}
             function isContainer(): bool { return false;}
             function matches(string $regex): bool { return false;}
+            public function equals($other, bool $strict = false): bool { return false; }
             // @formatter:on
         };
         $this->assertFalse($m->invokeArgs($finder, [$sus_entry]));

@@ -35,4 +35,12 @@ interface JSONEntry extends Serializable
      * @return bool returns true if the value() of this entry matches the given regex
      */
     function matches(string $regex): bool;
+
+    /**
+     * check if this JSONEntry's value is equal to the given value.
+     * @param $other JSONEntry|string|int|float|bool|null
+     * @param $strict bool if true, the value must be strictly equal to the given value with <code>===</code>
+     * @return bool true if the value is equal to the given value
+     */
+    public function equals($other, bool $strict = false): bool;
 }
