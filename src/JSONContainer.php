@@ -14,7 +14,6 @@ use RecursiveArrayIterator;
 
 /**
  * shared logic between {@link JSONArray} and {@link JSONObject}
- * @internal
  */
 abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregate, Countable
 {
