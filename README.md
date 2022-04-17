@@ -222,9 +222,10 @@ match javascript object-keys or javascript strings that are quoted with single q
 ```php
 use Eboubaker\JSON\JSONFinder;
 
+// this finder can also find javascript objects/arrays
 $finder = JSONFinder::make(JSONFinder::T_ALL_JSON | JSONFinder::T_JS);
-$finder->findEntries("{jskey: 1}");// [JSONObject({"jskey":1})]
-$finder->findEntries("{'jskey': 'jsstring'}");// [JSONObject({"jskey":"jsstring"})]
+$finder->findEntries("let data = {jskey: 1};")->first();// JSONObject({"jskey":1})
+$finder->findEntries("var x = Object.freez({'js-key': 'js string'})")->first();// JSONObject({"js-key":"js string"})
 ```
 
 All other functions are self documented with PHPDoc.
