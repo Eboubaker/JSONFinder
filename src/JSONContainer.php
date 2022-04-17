@@ -296,7 +296,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * @param string $path the path to search for
      * @param bool $paths_as_keys if true, the result will be an associative array of paths as keys and {@link JSONValue}s as values.
      * @param Closure|null $filter optional filter function to filter the results, it will be called with the found {@link JSONValue} as the first parameter and should return a boolean value to indicate if the entry should be included in the result or not
-     * @return array<string,JSONEntry>|false returns array of found entries or false if path syntax is invalid (contains ".." or <code>"**.*"</code>)
+     * @return JSONEntry[]|false returns array of found entries or false if path syntax is invalid (contains ".." or <code>"**.*"</code>)
      */
     public function getAll(string $path, Closure $filter = null, bool $paths_as_keys = false)
     {
