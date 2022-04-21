@@ -823,4 +823,50 @@ final class UnitTest extends TestCase
         $this->assertEquals('integer(0)', Utils::typeof(0));
         $this->assertEquals('integer(1)', Utils::typeof(1));
     }
+
+    public function testCanFilterEntries(): void
+    {
+        $array = JSONArray::from(JSONFinder::make()->findEntries($this->rawHTMLResponse)->values(false));
+        $filtered = $array->filter(fn(JSONEntry $entry, $key) => $key == 1 || (!$entry->isContainer() && is_integer($entry->value())));
+        $this->assertCount(434, $filtered);
+        $filtered = $array->filter(fn(JSONEntry $entry, $key) => is_numeric($entry->value()));
+        $this->assertCount(451, $filtered);
+
+        $object = JSONObject::from(JSONFinder::make()->findEntries($this->rawHTMLResponse)->values());
+        $filtered = $object->filter(fn(JSONEntry $entry, $key) => strpos($key, '.1'));
+        $this->assertCount(405, $filtered);
+        $filtered = $object->filter(fn(JSONEntry $entry, $key) => is_float($entry->value()));
+        $this->assertCount(10, $filtered);
+    }
+
+    public function testCanSortEntries(): void
+    {
+        $array = JSONArray::from([
+            1 => '1,2', 5 => '4,5', 2 => '6,8', 4 => '1,1'
+        ]);
+        $array = $array->sort(function (JSONEntry $a, JSONEntry $b) {
+            return intval(explode(',', $a->value())[1]) - intval(explode(',', $b->value())[1]);
+        });
+        $this->assertEquals([4, 1, 5, 2], array_keys($array->assoc()));
+
+        $array = $array->sort();
+        $this->assertEquals([1, 2, 4, 5], array_keys($array->assoc()));
+
+        $object = JSONObject::from(JSONFinder::make()->findEntries($this->rawHTMLResponse)->values());
+        $object = $object->sort(fn(JSONEntry $a, JSONEntry $b) => strcmp(strval($a->value()), strval($b->value())));
+        // TODO: why the hash changed?
+        // notice: only the order of equal values changes.
+        // note: the problem might not be in sort() function but in the input itself.
+        $hash = phpversion() > 7.4 ? '49e807d6e22609d24beeace1fc628185' : '996b2ae38a39d1567a71a458d4be44a7';
+        $this->assertEquals($hash, md5(strval($object)));
+
+        $expected = [];
+        foreach ($object->keys() as $k) {
+            $expected[$k] = false;
+        }
+        ksort($expected, SORT_REGULAR);
+
+        $object = $object->sort();
+        $this->assertEquals(array_keys($expected), $object->keys());
+    }
 }

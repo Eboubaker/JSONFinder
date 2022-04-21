@@ -18,8 +18,6 @@ class JSONValue implements JSONEntry
      */
     private $value;
 
-    private static JSONFinder $valueFinder;
-
     /**
      * @param $value bool|float|int|string|null|JSONStringable
      * @throws InvalidArgumentException if the value is not one of the allowed types
@@ -101,27 +99,6 @@ class JSONValue implements JSONEntry
         } else {
             throw new InvalidArgumentException("json serialization error: unexpected value type: \"" . Utils::typeof($this->value) . "\"");
         }
-    }
-
-    public function serialize(): string
-    {
-        return strval($this);
-    }
-
-    /**
-     * @throws InvalidArgumentException if data is not string or if no value found inside data
-     */
-    public function unserialize($data)
-    {
-        if (!isset(self::$valueFinder)) {
-            self::$valueFinder = JSONFinder::make(
-                JSONFinder::T_STRING
-                | JSONFinder::T_BOOL
-                | JSONFinder::T_NULL
-                | JSONFinder::T_NUMBER
-            );
-        }
-        $this->value = self::$valueFinder->findEntries($data)[0]->value;
     }
 
     /**

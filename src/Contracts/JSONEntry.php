@@ -5,12 +5,11 @@ namespace Eboubaker\JSON\Contracts;
 use Eboubaker\JSON\JSONArray;
 use Eboubaker\JSON\JSONObject;
 use Eboubaker\JSON\JSONValue;
-use Serializable;
 
 /**
  * a single json entry it can be one of {@link JSONArray}, {@link JSONObject}, {@link JSONValue}.
  */
-interface JSONEntry extends Serializable
+interface JSONEntry
 {
     /**
      * returns value contained in the entry.<br>

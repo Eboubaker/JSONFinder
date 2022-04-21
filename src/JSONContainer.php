@@ -80,6 +80,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         if (is_null($offset)) {
@@ -160,6 +161,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         return isset($this->entries[$offset]);
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         // if you are not sure if the container has the key use isset($obj[$offset]) before accessing to
@@ -167,6 +169,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         return $this->entries[$offset];
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         unset($this->entries[$offset]);
@@ -201,11 +204,6 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
             }
         }
         return $result;
-    }
-
-    public function serialize(): string
-    {
-        return strval($this);
     }
 
     /**

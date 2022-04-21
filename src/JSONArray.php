@@ -12,8 +12,6 @@ use InvalidArgumentException;
  */
 class JSONArray extends JSONContainer
 {
-    private static JSONFinder $valueFinder;
-
     /**
      * @param array<JSONEntry|JSONStringable>|iterable $entries
      * @throws InvalidArgumentException if the array contains a non integer key, or the tail values of the array are not primitive types
@@ -116,11 +114,37 @@ class JSONArray extends JSONContainer
         parent::offsetSet($offset, $value);
     }
 
-    public function unserialize($data)
+    /**
+     * Sort through each entry with a callback.<br>
+     * note: sorting will not change the keys. each value will keep it's key.
+     * @param callable|null $callback callback will be supplied with two {@link JSONEntry}s and must return an integer less than, equal to, or greater than zero if the first {@link JSONEntry} is considered to be respectively less than, equal to, or greater than the second.<br>
+     * if left null then the function will sort entries by their keys numerically.
+     * @return static a new instance with the sorted entries.
+     */
+    public function sort(callable $callback = null): JSONArray
     {
-        if (!isset(self::$valueFinder)) {
-            self::$valueFinder = JSONFinder::make(JSONFinder::T_ARRAY | JSONFinder::T_EMPTY_ARRAY);
+        $entries = $this->entries;
+
+        if ($callback) uasort($entries, $callback);
+        else ksort($entries, SORT_REGULAR);
+
+        return new static($entries);
+    }
+
+    /**
+     * Run a filter over each of the entries.
+     * note: filtering will not change the keys. each value will keep it's key.
+     * @param callable $callback callback function will receive the entry and the key and return true if the entry should be added in the new instance.
+     * @return static a new instance with the filtered entries.
+     */
+    public function filter(callable $callback): JSONArray
+    {
+        $entries = [];
+        foreach ($this->entries as $key => $value) {
+            if ($callback($value, $key)) {
+                $entries[$key] = $value;
+            }
         }
-        $this->entries = self::$valueFinder->findEntries($data)[0]->entries;
+        return new static($entries);
     }
 }

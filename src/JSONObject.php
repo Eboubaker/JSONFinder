@@ -11,8 +11,6 @@ use InvalidArgumentException;
  */
 class JSONObject extends JSONContainer
 {
-    private static JSONFinder $valueFinder;
-
     /**
      * @param object|iterable|array<string,JSONEntry|mixed> $entries
      * @throws InvalidArgumentException if the array or the object contains a tail value which is not a primitive type
@@ -120,11 +118,37 @@ class JSONObject extends JSONContainer
         parent::offsetSet($offset, $value);
     }
 
-    public function unserialize($data)
+    /**
+     * Sort through each entry with a callback.
+     *
+     * @param callable|null $callback callback will be supplied with two {@link JSONEntry}s and must return an integer less than, equal to, or greater than zero if the first {@link JSONEntry} is considered to be respectively less than, equal to, or greater than the second.<br>
+     * if left null then the function will sort entries by their keys alphabetically.
+     * @return static a new instance with the sorted entries.
+     */
+    public function sort(callable $callback = null): JSONObject
     {
-        if (!isset(self::$valueFinder)) {
-            self::$valueFinder = JSONFinder::make(JSONFinder::T_OBJECT | JSONFinder::T_EMPTY_OBJECT);
+        $entries = $this->entries;
+
+        if ($callback) uasort($entries, $callback);
+        else ksort($entries, SORT_REGULAR);
+
+        return new static($entries);
+    }
+
+    /**
+     * Run a filter over each of the entries.
+     *
+     * @param callable $callback callback function will receive the entry and the key and return true if the entry should be added in the new instance.
+     * @return static a new instance with the filtered entries.
+     */
+    public function filter(callable $callback): JSONObject
+    {
+        $entries = [];
+        foreach ($this->entries as $key => $value) {
+            if ($callback($value, $key)) {
+                $entries[$key] = $value;
+            }
         }
-        $this->entries = self::$valueFinder->findEntries($data)[0]->entries;
+        return new static($entries);
     }
 }
