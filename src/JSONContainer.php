@@ -579,4 +579,8 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * @return string returns the prettified json
      */
     abstract function toReadableString(int $indent): string;
+
+    abstract function sort(callable $callback = null);
+
+    abstract function filter(callable $callback);
 }
