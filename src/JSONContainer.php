@@ -578,9 +578,9 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * @param int $indent number of spaces to indent
      * @return string returns the prettified json
      */
-    abstract function toReadableString(int $indent): string;
+    abstract public function toReadableString(int $indent): string;
 
-    abstract function sort(callable $callback = null);
+    abstract public function sort(callable $callback = null);
 
-    abstract function filter(callable $callback);
+    abstract public function filter(callable $callback);
 }
