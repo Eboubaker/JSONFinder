@@ -12,7 +12,14 @@ final class Utils
     {
         if (is_object($value)) {
             return get_class($value);
+        } else if (is_string($value)) {
+            return gettype($value) . "(\"" . $value . "\")";
+        } else if (is_numeric($value)) {
+            return gettype($value) . "(" . $value . ")";
+        } else if (is_bool($value)) {
+            return gettype($value) . "(\"" . ($value ? "true" : "false") . "\")";
+        } else {
+            return gettype($value);
         }
-        return gettype($value);
     }
 }
