@@ -4,16 +4,18 @@ namespace Eboubaker\JSON\Contracts;
 
 use Eboubaker\JSON\JSONArray;
 use Eboubaker\JSON\JSONObject;
+use Eboubaker\JSON\JSONValue;
 use Serializable;
 
 /**
- * a single json entry it's value() can be one of {@link JSONArray}, {@link JSONObject}, string, number, bool, null.  <br>
- * an entry will return itself as a value if it is a {@link JSONObject} or {@link JSONArray}
+ * a single json entry it can be one of {@link JSONArray}, {@link JSONObject}, {@link JSONValue}.
  */
 interface JSONEntry extends Serializable
 {
     /**
-     * returns value contained in the entry
+     * returns value contained in the entry.<br>
+     * if the entry is a {@link JSONArray} or {@link JSONObject} it will return itself.<br>
+     * if the entry is a {@link JSONValue} it will return the value contained.
      * @return bool|string|int|float|null|JSONArray|JSONObject|JSONStringable
      */
     function value();
@@ -25,13 +27,13 @@ interface JSONEntry extends Serializable
     function __toString(): string;
 
     /**
-     * @return bool returns true if this entry contains other entries inside.
+     * @return bool returns true if this entry is JSONArray or JSONObject.
      */
     function isContainer(): bool;
 
     /**
      * check if the value of the entry matches a perl regular expression
-     * @param string $regex a valid preg_regex pattern which starts and ends with a delimiter preferably '/'
+     * @param string $regex a valid preg_regex pattern which starts and ends with a delimiter preferably <code>'/'<code>
      * @return bool returns true if the value() of this entry matches the given regex
      */
     function matches(string $regex): bool;
