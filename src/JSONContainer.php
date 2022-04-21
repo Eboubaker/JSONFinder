@@ -123,17 +123,26 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     /**
      * returns an iterator of all nested {@link JSONValue}s<br>
      * keys returned by the iterator are the path of the nested values separated by dots
+     * @param bool $with_paths if true then the iterator will also include paths of values as the key.
      * @return Generator<JSONValue>
      */
-    public function values(): Generator
+    public function values(bool $with_paths = true): Generator
     {
         foreach ($this->entries as $key => $entry) {
             if ($entry instanceof JSONContainer) {
-                foreach ($entry->values() as $k => $value) {
-                    yield $key . '.' . $k => $value;
+                foreach ($entry->values($with_paths) as $k => $value) {
+                    if ($with_paths) {
+                        yield $key . '.' . $k => $value;
+                    } else {
+                        yield $value;
+                    }
                 }
             } else {// it must be JSONValue
-                yield $key => $entry;
+                if ($with_paths) {
+                    yield $key => $entry;
+                } else {
+                    yield $entry;
+                }
             }
         }
     }
