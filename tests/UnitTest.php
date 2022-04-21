@@ -203,7 +203,10 @@ final class UnitTest extends TestCase
     }
 
 
-    public function testCanDoFiltering(): void
+    /**
+     * @testdox can find entries with javascript flag off
+     */
+    public function testCanFindEntriesWithJSFlagOFF(): void
     {
         $count = fn($types) => JSONFinder::make($types)->findEntries($this->rawHTMLResponse)->count();
         //@formatter:off
@@ -226,9 +229,9 @@ final class UnitTest extends TestCase
     }
 
     /**
-     * @testdox can do filtering with javascript flag on
+     * @testdox can find entries with javascript flag on
      */
-    public function testCanDoFilteringWithJSFlag(): void
+    public function testCanFindEntriesWithJSFlagON(): void
     {
         $count = fn($types) => JSONFinder::make($types)->findEntries($this->rawHTMLResponse)->count();
         //@formatter:off
