@@ -208,6 +208,14 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
         return strval($this);
     }
 
+    /**
+     * returns keys of the entries.
+     */
+    public function keys(): array
+    {
+        return array_keys($this->entries);
+    }
+
 
     /**
      * returns list of entries that are {@link JSONObject} or {@link JSONArray}
