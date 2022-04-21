@@ -273,7 +273,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
      * find first JSONEntry that matches the dot notation path. accepts wildcards <code>*</code> and <code>**</code>.<br>
      * @param string $path path to the value.
      * @param $default mixed|callable default value to return if no result was found, can be a callback.
-     * @return mixed|null returns the found JSONEntry or default value if not found or if path has invalid syntax (contains ".." or <code>"**.*"</code>).
+     * @return JSONArray|JSONObject|JSONValue|JSONEntry|null returns the found JSONEntry or default value if not found or if path has invalid syntax (contains ".." or <code>"**.*"</code>).
      */
     public function get(string $path, $default = null)
     {
@@ -311,7 +311,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     }
 
     /**
-     * gets signle result of a single path
+     * gets single result of a single path
      */
     private function internal_get(array $segments): ?JSONEntry
     {
@@ -534,7 +534,7 @@ abstract class JSONContainer implements JSONEntry, ArrayAccess, IteratorAggregat
     }
 
     /**
-     * check if this container contains the same entry keys and values as $other
+     * check if this container contains the same entry keys and values as <code>$other</code>
      * @param $other JSONContainer|mixed the other array or object to compare with
      * @return bool returns true if all keys and values are the same with $other, otherwise false.
      */
