@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1650562137">
-  <project timestamp="1650562137">
+<coverage generated="1650562689">
+  <project timestamp="1650562689">
     <file name="/home/runner/work/JSONFinder/JSONFinder/src/Contracts/JSONEntry.php">
       <metrics loc="49" ncloc="21" classes="0" methods="0" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="0" coveredstatements="0" elements="0" coveredelements="0"/>
     </file>
