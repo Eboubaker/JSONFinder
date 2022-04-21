@@ -37,7 +37,8 @@ interface JSONEntry extends Serializable
     function matches(string $regex): bool;
 
     /**
-     * check if this JSONEntry's value is equal to the given value.
+     * check if this JSONEntry's value is equal to the given value.<br>
+     * note: this method is recursive, StackOverflow may occur if there are circular references
      * @param $other JSONEntry|string|int|float|bool|null
      * @param $strict bool if true, the value must be strictly equal to the given value with <code>===</code>
      * @return bool true if the value is equal to the given value
