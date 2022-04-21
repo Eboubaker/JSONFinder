@@ -12,6 +12,7 @@ use Eboubaker\JSON\JSONContainer;
 use Eboubaker\JSON\JSONFinder;
 use Eboubaker\JSON\JSONObject;
 use Eboubaker\JSON\JSONValue;
+use Eboubaker\JSON\Utils;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
@@ -810,5 +811,16 @@ final class UnitTest extends TestCase
         $this->assertNull($object->get('response.posts.comments.0.replies'));
         $this->assertNull($object->get('response.**.videos.**.posts'));
         $this->assertNull($object->get('response.posts.comments.0.replies'));
+    }
+
+    public function testTypeOf(): void
+    {
+        $this->assertEquals('string("12")', Utils::typeof("12"));
+        $this->assertEquals('boolean("true")', Utils::typeof(true));
+        $this->assertEquals('boolean("false")', Utils::typeof(false));
+        $this->assertEquals('string("")', Utils::typeof(''));
+        $this->assertEquals('double(3.4)', Utils::typeof(3.4));
+        $this->assertEquals('integer(0)', Utils::typeof(0));
+        $this->assertEquals('integer(1)', Utils::typeof(1));
     }
 }
