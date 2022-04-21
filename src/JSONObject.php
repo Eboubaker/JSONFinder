@@ -65,13 +65,13 @@ class JSONObject extends JSONContainer
      */
     public function toReadableString(int $indent = 2): string
     {
-        return $this->__toReadableString($indent, $indent);
+        return $this->internal_toReadableString($indent, $indent);
     }
 
     /**
-     * @internal this method is not part of the public API
+     * @internal
      */
-    function __toReadableString(int $indent, $indentIncrease): string
+    function internal_toReadableString(int $indent, $indentIncrease): string
     {
         $str = '{';
         if ($indent > 0 && count($this->entries) > 0) {
@@ -86,7 +86,7 @@ class JSONObject extends JSONContainer
             }
             /** @noinspection DuplicatedCode */
             if ($entry instanceof JSONArray || $entry instanceof JSONObject) {
-                $str .= $entry->__toReadableString($indent + $indentIncrease, $indentIncrease);
+                $str .= $entry->internal_toReadableString($indent + $indentIncrease, $indentIncrease);
             } else {// it must be JSONValue
                 /** @var JSONValue $entry */
                 $str .= $entry;

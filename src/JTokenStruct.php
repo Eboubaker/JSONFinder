@@ -5,8 +5,7 @@ namespace Eboubaker\JSON;
 use Eboubaker\JSON\Contracts\JSONEntry;
 
 /**
- * @internal this class is not part of the public API
- * used by the parser to pass values between parser methods
+ * @internal used by the parser to pass values between it's functions.
  */
 final class JTokenStruct
 {
@@ -17,7 +16,7 @@ final class JTokenStruct
     public int $length;
 
     /**
-     * @internal this class is not part of the public API
+     * @internal
      */
     public function __construct(JSONEntry $entry, int $length)
     {
