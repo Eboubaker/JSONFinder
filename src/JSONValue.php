@@ -146,6 +146,7 @@ class JSONValue implements JSONEntry
 
     public function matches(string $regex): bool
     {
+        if ($this->value instanceof JSONStringable) return false;
         return preg_match($regex, strval($this->value)) === 1;
     }
 }
